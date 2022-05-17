@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.lockscreen.di
+package im.vector.app.core.di
 
 import android.content.Context
 import androidx.biometric.BiometricManager
@@ -27,6 +27,8 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import im.vector.lockscreen.biometrics.BiometricUtils
 import im.vector.lockscreen.configuration.LockScreenConfiguration
+import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
+import im.vector.lockscreen.configuration.LockScreenMode
 import im.vector.lockscreen.crypto.KeyHelper
 import im.vector.lockscreen.fragments.VectorLockScreenViewModel
 import im.vector.lockscreen.pincode.EncryptedPinCodeStorage
@@ -40,9 +42,10 @@ object LockScreenModule {
 
     @Provides
     fun provideLockScreenConfig() = LockScreenConfiguration(
+            mode = LockScreenMode.VERIFY,
             pinCodeLength = 4,
-            isFaceUnlockEnabled = true,
-            isDeviceCredentialUnlockEnabled = true,
+            isFaceUnlockEnabled = false,
+            isDeviceCredentialUnlockEnabled = false,
             isBiometricsEnabled = true,
             needsNewCodeValidation = true,
     )
@@ -56,8 +59,8 @@ object LockScreenModule {
     fun provideBiometricUtils(
             @ApplicationContext context: Context,
             keyHelper: KeyHelper,
-            configuration: LockScreenConfiguration,
-    ) = BiometricUtils(context, keyHelper, configuration, BiometricManager.from(context))
+            configurationProvider: LockScreenConfiguratorProvider,
+    ) = BiometricUtils(context, keyHelper, configurationProvider, BiometricManager.from(context))
 
     @Provides
     @Singleton

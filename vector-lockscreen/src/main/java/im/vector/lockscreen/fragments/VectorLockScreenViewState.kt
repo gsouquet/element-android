@@ -21,7 +21,6 @@ import im.vector.lockscreen.configuration.LockScreenConfiguration
 import im.vector.lockscreen.configuration.LockScreenMode
 
 data class VectorLockScreenViewState(
-        val lockScreenMode: LockScreenMode,
         val lockScreenConfiguration: LockScreenConfiguration,
         val canUseBiometricAuth: Boolean,
         val showBiometricPromptAutomatically: Boolean,

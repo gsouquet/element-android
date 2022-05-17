@@ -18,47 +18,49 @@ package im.vector.app.features.pin
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.beautycoder.pflockscreen.security.PFResult
-import com.beautycoder.pflockscreen.security.PFSecurityManager
-import com.beautycoder.pflockscreen.security.callbacks.PFPinCodeHelperCallback
+import im.vector.lockscreen.pincode.EncryptedPinCodeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.matrix.android.sdk.api.extensions.orFalse
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
-interface PinCodeStore {
+interface PinCodeStore: EncryptedPinCodeStorage {
 
-    suspend fun storeEncodedPin(encodePin: String)
-
-    suspend fun deleteEncodedPin()
-
-    fun getEncodedPin(): String?
-
-    suspend fun hasEncodedPin(): Boolean
-
+    /**
+     * Returns the remaining PIN code attempts. When this reaches 0 the PIN code access won't be available for some time.
+     */
     fun getRemainingPinCodeAttemptsNumber(): Int
 
+    /**
+     * Returns the remaining biometric auth attempts. When this reaches 0 the biometric access won't be available for some time.
+     */
     fun getRemainingBiometricsAttemptsNumber(): Int
 
     /**
-     * Will return the number of remaining attempts.
+     * Should decrement the number of remaining PIN code attempts.
+     * @return The remaining attempts.
      */
     fun onWrongPin(): Int
 
     /**
-     * Will return the number of remaining attempts.
+     * Should decrement the number of remaining biometric attempts.
+     * @return The remaining attempts.
      */
     fun onWrongBiometrics(): Int
 
     /**
-     * Will reset the counters.
+     * Resets the counter of attempts for PIN code and biometric access.
      */
     fun resetCounters()
 
+    /**
+     * Adds a listener to be notified when the PIN code us created or removed.
+     */
     fun addListener(listener: PinCodeStoreListener)
+
+    /**
+     * Removes a listener to be notified when the PIN code us created or removed.
+     */
     fun removeListener(listener: PinCodeStoreListener)
 }
 
@@ -67,46 +69,37 @@ interface PinCodeStoreListener {
 }
 
 @Singleton
-class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: SharedPreferences) : PinCodeStore {
+class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: SharedPreferences) : PinCodeStore, EncryptedPinCodeStorage {
     private val listeners = mutableSetOf<PinCodeStoreListener>()
 
-    override suspend fun storeEncodedPin(encodePin: String) {
+    override suspend fun getPinCode(): String? {
+        return sharedPreferences.getString(ENCODED_PIN_CODE_KEY, null)
+    }
+
+    override suspend fun savePinCode(pinCode: String) {
         withContext(Dispatchers.IO) {
             sharedPreferences.edit {
-                putString(ENCODED_PIN_CODE_KEY, encodePin)
+                putString(ENCODED_PIN_CODE_KEY, pinCode)
             }
         }
         listeners.forEach { it.onPinSetUpChange(isConfigured = true) }
     }
 
-    override suspend fun deleteEncodedPin() {
+    override suspend fun deletePinCode() {
         withContext(Dispatchers.IO) {
             // Also reset the counters
             resetCounters()
             sharedPreferences.edit {
                 remove(ENCODED_PIN_CODE_KEY)
             }
-            awaitPinCodeCallback<Boolean> {
-                PFSecurityManager.getInstance().pinCodeHelper.delete(it)
-            }
         }
         listeners.forEach { it.onPinSetUpChange(isConfigured = false) }
     }
 
-    override fun getEncodedPin(): String? {
-        return sharedPreferences.getString(ENCODED_PIN_CODE_KEY, null)
+    override suspend fun hasEncodedPin(): Boolean {
+        return withContext(Dispatchers.IO) { sharedPreferences.contains(ENCODED_PIN_CODE_KEY) }
     }
 
-    override suspend fun hasEncodedPin(): Boolean = withContext(Dispatchers.IO) {
-        val hasEncodedPin = getEncodedPin()?.isNotBlank().orFalse()
-        if (!hasEncodedPin) {
-            return@withContext false
-        }
-        val result = awaitPinCodeCallback<Boolean> {
-            PFSecurityManager.getInstance().pinCodeHelper.isPinCodeEncryptionKeyExist(it)
-        }
-        result.error == null && result.result
-    }
 
     override fun getRemainingPinCodeAttemptsNumber(): Int {
         return sharedPreferences.getInt(REMAINING_PIN_CODE_ATTEMPTS_KEY, MAX_PIN_CODE_ATTEMPTS_NUMBER_BEFORE_LOGOUT)
@@ -145,10 +138,6 @@ class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: 
 
     override fun removeListener(listener: PinCodeStoreListener) {
         listeners.remove(listener)
-    }
-
-    private suspend inline fun <T> awaitPinCodeCallback(crossinline callback: (PFPinCodeHelperCallback<T>) -> Unit) = suspendCoroutine<PFResult<T>> { cont ->
-        callback(PFPinCodeHelperCallback<T> { result -> cont.resume(result) })
     }
 
     companion object {

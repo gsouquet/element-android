@@ -19,19 +19,21 @@ package im.vector.lockscreen.fragments
 import android.os.Build
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.fragment.app.FragmentActivity
-import com.airbnb.mvrx.FragmentViewModelContext
 import com.airbnb.mvrx.MavericksViewModel
 import com.airbnb.mvrx.MavericksViewModelFactory
 import com.airbnb.mvrx.ViewModelContext
+import com.airbnb.mvrx.withState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.EntryPoints
 import im.vector.lockscreen.biometrics.BiometricUtils
+import im.vector.lockscreen.configuration.LockScreenConfiguration
+import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.lockscreen.configuration.LockScreenMode
-import im.vector.lockscreen.di.MavericksAssistedViewModelFactory
-import im.vector.lockscreen.di.SingletonEntryPoint
-import im.vector.lockscreen.di.hiltMavericksViewModelFactory
+import im.vector.app.core.di.MavericksAssistedViewModelFactory
+import im.vector.app.core.di.SingletonEntryPoint
+import im.vector.app.core.di.hiltMavericksViewModelFactory
 import im.vector.lockscreen.pincode.PinCodeUtils
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +48,7 @@ class VectorLockScreenViewModel @AssistedInject constructor(
         @Assisted val initialState: VectorLockScreenViewState,
         private val pinCodeUtils: PinCodeUtils,
         private val biometricUtils: BiometricUtils,
+        private val configuratorProvider: LockScreenConfiguratorProvider,
 ): MavericksViewModel<VectorLockScreenViewState>(initialState) {
 
     @AssistedFactory
@@ -57,10 +60,7 @@ class VectorLockScreenViewModel @AssistedInject constructor(
 
         override fun initialState(viewModelContext: ViewModelContext): VectorLockScreenViewState {
             val entryPoint = EntryPoints.get(viewModelContext.app(), SingletonEntryPoint::class.java)
-            val fragment = (viewModelContext as FragmentViewModelContext).fragment
-            val lockScreenMode = fragment.arguments?.getParcelable<LockScreenMode>(VectorLockScreenFragment.ARG_LOCK_MODE)
             return VectorLockScreenViewState(
-                    lockScreenMode = lockScreenMode ?: LockScreenMode.VERIFY,
                     lockScreenConfiguration = entryPoint.lockScreenConfiguration(),
                     canUseBiometricAuth = false,
                     showBiometricPromptAutomatically = false,
@@ -76,12 +76,14 @@ class VectorLockScreenViewModel @AssistedInject constructor(
     val viewEvent: Flow<VectorLockScreenViewEvent> = mutableViewEventsFlow
 
     init {
-        updateStateWithBiometricInfo()
+        configuratorProvider.configurationFlow
+                .onEach { updateConfiguration(it) }
+                .launchIn(viewModelScope)
     }
 
     fun onPinCodeEntered(code: String) = flow {
         val state = awaitState()
-        when (state.lockScreenMode) {
+        when (state.lockScreenConfiguration.mode) {
             LockScreenMode.CREATE -> {
                 if (firstEnteredCode == null && state.lockScreenConfiguration.needsNewCodeValidation) {
                     firstEnteredCode = code
@@ -135,8 +137,8 @@ class VectorLockScreenViewModel @AssistedInject constructor(
     }
 
     private fun updateStateWithBiometricInfo() {
-        val configuration = initialState.lockScreenConfiguration
-        val canUseBiometricAuth = initialState.lockScreenMode == LockScreenMode.VERIFY
+        val configuration = withState(this) { it.lockScreenConfiguration }
+        val canUseBiometricAuth = configuration.mode == LockScreenMode.VERIFY
                 && biometricUtils.isSystemAuthEnabled
         val isBiometricKeyInvalidated = biometricUtils.hasSystemKey && !biometricUtils.isSystemKeyValid
         val showBiometricPromptAutomatically = canUseBiometricAuth
@@ -151,5 +153,9 @@ class VectorLockScreenViewModel @AssistedInject constructor(
         }
     }
 
+    private fun updateConfiguration(configuration: LockScreenConfiguration) {
+        setState { copy(lockScreenConfiguration = configuration) }
+        updateStateWithBiometricInfo()
+    }
 }
 

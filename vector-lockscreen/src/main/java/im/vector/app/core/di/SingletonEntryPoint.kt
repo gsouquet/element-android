@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.lockscreen.di
+package im.vector.app.core.di
 
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn

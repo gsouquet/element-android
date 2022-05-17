@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import im.vector.lockscreen.R
 import im.vector.lockscreen.configuration.LockScreenConfiguration
+import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.lockscreen.crypto.KeyHelper
 import im.vector.lockscreen.fragments.FallbackBiometricDialogFragment
 import im.vector.lockscreen.utils.DevicePromptCheck
@@ -57,28 +58,30 @@ import kotlin.coroutines.CoroutineContext
 class BiometricUtils(
         private val context: Context,
         private val keyHelper: KeyHelper,
-        private val lockScreenConfiguration: LockScreenConfiguration,
+        private val configurationProvider: LockScreenConfiguratorProvider,
         private val biometricManager: BiometricManager,
 ) {
     private var prompt: BiometricPrompt? = null
+
+    private val configuration: LockScreenConfiguration get() = configurationProvider.currentConfiguration
 
     /**
      * Returns true if a weak biometric method (i.e.: some face or iris unlock implementations) can be used.
      */
     val canUseWeakBiometricAuth: Boolean get()=
-        lockScreenConfiguration.isFaceUnlockEnabled && biometricManager.canAuthenticate(BIOMETRIC_WEAK) == BIOMETRIC_SUCCESS
+        configuration.isFaceUnlockEnabled && biometricManager.canAuthenticate(BIOMETRIC_WEAK) == BIOMETRIC_SUCCESS
 
     /**
      * Returns true if a strong biometric method (i.e.: fingerprint, some face or iris unlock implementations) can be used.
      */
     val canUseStrongBiometricAuth: Boolean get()=
-        lockScreenConfiguration.isBiometricsEnabled && biometricManager.canAuthenticate(BIOMETRIC_STRONG) == BIOMETRIC_SUCCESS
+        configuration.isBiometricsEnabled && biometricManager.canAuthenticate(BIOMETRIC_STRONG) == BIOMETRIC_SUCCESS
 
     /**
      * Returns true if the device credentials can be used to unlock (system pin code, password, pattern, etc.).
      */
     val canUseDeviceCredentialsAuth: Boolean get()=
-        lockScreenConfiguration.isDeviceCredentialUnlockEnabled && biometricManager.canAuthenticate(DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
+        configuration.isDeviceCredentialUnlockEnabled && biometricManager.canAuthenticate(DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
 
     /**
      * Returns true if any system authentication method (biometric weak/strong or device credentials) can be used.
@@ -183,11 +186,11 @@ class BiometricUtils(
         val callback = createSuspendingAuthCallback(channel, executor.asCoroutineDispatcher())
         val authenticators = getAvailableAuthenticators()
         val isUsingDeviceCredentialAuthenticator = authenticators.hasFlag(DEVICE_CREDENTIAL)
-        val cancelButtonTitle = lockScreenConfiguration.biometricCancelButtonTitle ?: context.getString(R.string.cancel_pf)
+        val cancelButtonTitle = configuration.biometricCancelButtonTitle ?: context.getString(R.string.cancel_pf)
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle(lockScreenConfiguration.biometricTitle ?: context.getString(R.string.sign_in_pf))
+                .setTitle(configuration.biometricTitle ?: context.getString(R.string.sign_in_pf))
                 .apply {
-                    lockScreenConfiguration.biometricSubtitle?.let {
+                    configuration.biometricSubtitle?.let {
                         setSubtitle(it)
                     }
                     if (!isUsingDeviceCredentialAuthenticator) {
@@ -282,9 +285,9 @@ class BiometricUtils(
         if (DevicePromptCheck.isDeviceWithNoBiometricUI) {
             val fallbackFragment = activity.supportFragmentManager.findFragmentByTag(FALLBACK_BIOMETRIC_FRAGMENT_TAG) as? FallbackBiometricDialogFragment
                     ?: FallbackBiometricDialogFragment.instantiate(
-                            title = lockScreenConfiguration.biometricTitle,
-                            description = lockScreenConfiguration.biometricSubtitle,
-                            cancelActionText = lockScreenConfiguration.biometricCancelButtonTitle,
+                            title = configuration.biometricTitle,
+                            description = configuration.biometricSubtitle,
+                            cancelActionText = configuration.biometricCancelButtonTitle,
                     )
             fallbackFragment.onDismiss = { cancelPrompt() }
             fallbackFragment.authenticationFlow = channel.receiveAsFlow()

@@ -56,7 +56,7 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
         }.launchIn(viewLifecycleOwner.lifecycleScope)
 
         withState(viewModel) { state ->
-            if (state.lockScreenMode == LockScreenMode.CREATE) return@withState
+            if (state.lockScreenConfiguration.mode == LockScreenMode.CREATE) return@withState
 
             if (state.showBiometricPromptAutomatically && !state.isBiometricKeyInvalidated) {
                 viewLifecycleOwner.lifecycleScope.launchWhenResumed {
@@ -136,7 +136,7 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
 
     private fun setupBindings(binding: FragmentLockScreenBinding) = with(binding) {
         val configuration = withState(viewModel) { it.lockScreenConfiguration }
-        val lockScreenMode = withState(viewModel) { it.lockScreenMode }
+        val lockScreenMode = configuration.mode
 
         configuration.title?.let { titleTextView.text = it }
         configuration.subtitle?.let {
@@ -215,14 +215,6 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
 
     private fun showBiometricPrompt() {
         viewModel.showBiometricPrompt(requireActivity())
-    }
-
-    companion object {
-        const val ARG_LOCK_MODE = "vector.lockscreen.lock_mode"
-
-        operator fun invoke(lockScreenMode: LockScreenMode) = VectorLockScreenFragment().also {
-            it.arguments = bundleOf(ARG_LOCK_MODE to lockScreenMode)
-        }
     }
 }
 

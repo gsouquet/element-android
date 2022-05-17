@@ -23,10 +23,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
 import com.airbnb.mvrx.args
-import com.beautycoder.pflockscreen.PFFLockScreenConfiguration
-import com.beautycoder.pflockscreen.fragments.PFLockScreenFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import im.vector.app.R
 import im.vector.app.core.extensions.replaceFragment
@@ -36,7 +33,12 @@ import im.vector.app.databinding.FragmentPinBinding
 import im.vector.app.features.MainActivity
 import im.vector.app.features.MainActivityArgs
 import im.vector.app.features.settings.VectorPreferences
-import kotlinx.coroutines.launch
+import im.vector.lockscreen.configuration.LockScreenConfiguration
+import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
+import im.vector.lockscreen.configuration.LockScreenMode
+import im.vector.lockscreen.fragments.AuthMethod
+import im.vector.lockscreen.fragments.LockScreenListener
+import im.vector.lockscreen.fragments.VectorLockScreenFragment
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
@@ -47,7 +49,9 @@ data class PinArgs(
 
 class PinFragment @Inject constructor(
         private val pinCodeStore: PinCodeStore,
-        private val vectorPreferences: VectorPreferences
+        private val vectorPreferences: VectorPreferences,
+        private val defaultLockScreenConfiguration: LockScreenConfiguration,
+        private val configuratorProvider: LockScreenConfiguratorProvider,
 ) : VectorBaseFragment<FragmentPinBinding>() {
 
     private val fragmentArgs: PinArgs by args()
@@ -66,77 +70,65 @@ class PinFragment @Inject constructor(
     }
 
     private fun showCreateFragment() {
-        val createFragment = PFLockScreenFragment()
-        val builder = PFFLockScreenConfiguration.Builder(requireContext())
-                .setNewCodeValidation(true)
-                .setTitle(getString(R.string.create_pin_title))
-                .setNewCodeValidationTitle(getString(R.string.create_pin_confirm_title))
-                .setMode(PFFLockScreenConfiguration.MODE_CREATE)
-
-        createFragment.setConfiguration(builder.build())
-        createFragment.setCodeCreateListener(object : PFLockScreenFragment.OnPFLockScreenCodeCreateListener {
+        val createFragment = VectorLockScreenFragment()
+        createFragment.lockScreenListener = object: LockScreenListener() {
             override fun onNewCodeValidationFailed() {
                 Toast.makeText(requireContext(), getString(R.string.create_pin_confirm_failure), Toast.LENGTH_SHORT).show()
             }
 
-            override fun onPinCodeEnteredFirst(pinCode: String?): Boolean {
-                return false
+            override fun onPinCodeCreated() {
+                vectorBaseActivity.setResult(Activity.RESULT_OK)
+                vectorBaseActivity.finish()
             }
+        }
 
-            override fun onCodeCreated(encodedCode: String) {
-                lifecycleScope.launch {
-                    pinCodeStore.storeEncodedPin(encodedCode)
-                    vectorBaseActivity.setResult(Activity.RESULT_OK)
-                    vectorBaseActivity.finish()
-                }
-            }
-        })
+        val configuration = defaultLockScreenConfiguration.copy(
+                mode = LockScreenMode.CREATE,
+                title = getString(R.string.create_pin_title),
+                needsNewCodeValidation = true,
+                newCodeConfirmationTitle = getString(R.string.create_pin_confirm_title),
+        )
+        configuratorProvider.updateConfiguration(configuration)
         replaceFragment(R.id.pinFragmentContainer, createFragment)
     }
 
     private fun showAuthFragment() {
-        val encodedPin = pinCodeStore.getEncodedPin() ?: return
-        val authFragment = PFLockScreenFragment()
+        val authFragment = VectorLockScreenFragment()
         val canUseBiometrics = pinCodeStore.getRemainingBiometricsAttemptsNumber() > 0
-        val builder = PFFLockScreenConfiguration.Builder(requireContext())
-                .setAutoShowBiometric(true)
-                .setUseBiometric(vectorPreferences.useBiometricsToUnlock() && canUseBiometrics)
-                .setAutoShowBiometric(canUseBiometrics)
-                .setTitle(getString(R.string.auth_pin_title))
-                .setLeftButton(getString(R.string.auth_pin_forgot))
-                .setClearCodeOnError(true)
-                .setMode(PFFLockScreenConfiguration.MODE_AUTH)
-        authFragment.setConfiguration(builder.build())
-        authFragment.setEncodedPinCode(encodedPin)
-        authFragment.setOnLeftButtonClickListener {
-            displayForgotPinWarningDialog()
-        }
-        authFragment.setLoginListener(object : PFLockScreenFragment.OnPFLockScreenLoginListener {
-            override fun onPinLoginFailed() {
-                onWrongPin()
-            }
-
-            override fun onBiometricAuthSuccessful() {
-                pinCodeStore.resetCounters()
-                vectorBaseActivity.setResult(Activity.RESULT_OK)
-                vectorBaseActivity.finish()
-            }
-
-            override fun onBiometricAuthLoginFailed() {
-                val remainingAttempts = pinCodeStore.onWrongBiometrics()
-                if (remainingAttempts <= 0) {
-                    // Disable Biometrics
-                    builder.setUseBiometric(false)
-                    authFragment.setConfiguration(builder.build())
+//        val builder = PFFLockScreenConfiguration.Builder(requireContext())
+//                .setAutoShowBiometric(true)
+//                .setUseBiometric(vectorPreferences.useBiometricsToUnlock() && canUseBiometrics)
+//                .setAutoShowBiometric(canUseBiometrics)
+//                .setTitle(getString(R.string.auth_pin_title))
+//                .setLeftButton(getString(R.string.auth_pin_forgot))
+//                .setClearCodeOnError(true)
+//                .setMode(PFFLockScreenConfiguration.MODE_AUTH)
+//        authFragment.setConfiguration(builder.build())
+//        authFragment.setEncodedPinCode(encodedPin)
+        authFragment.onLeftButtonClickedListener = View.OnClickListener { displayForgotPinWarningDialog() }
+        authFragment.lockScreenListener = object: LockScreenListener() {
+            override fun onAuthenticationFailure(authMethod: AuthMethod) {
+                when (authMethod) {
+                    AuthMethod.PIN_CODE -> onWrongPin()
+                    AuthMethod.BIOMETRICS -> onWrongBiometricAuth(authFragment)
                 }
             }
 
-            override fun onCodeInputSuccessful() {
+            override fun onAuthenticationSuccess(authMethod: AuthMethod) {
                 pinCodeStore.resetCounters()
                 vectorBaseActivity.setResult(Activity.RESULT_OK)
                 vectorBaseActivity.finish()
             }
-        })
+        }
+        val configuration = defaultLockScreenConfiguration.copy(
+                mode = LockScreenMode.VERIFY,
+                title = getString(R.string.auth_pin_title),
+                isBiometricsEnabled = vectorPreferences.useBiometricsToUnlock() && canUseBiometrics,
+                autoStartBiometric = canUseBiometrics,
+                leftButtonTitle = getString(R.string.auth_pin_forgot),
+                clearCodeOnError = true,
+        )
+        configuratorProvider.updateConfiguration(configuration)
         replaceFragment(R.id.pinFragmentContainer, authFragment)
     }
 
@@ -152,6 +144,15 @@ class PinFragment @Inject constructor(
                 // Logout
                 MainActivity.restartApp(requireActivity(), MainActivityArgs(clearCredentials = true))
             }
+        }
+    }
+
+    private fun onWrongBiometricAuth(authFragment: VectorLockScreenFragment) {
+        val remainingAttempts = pinCodeStore.onWrongBiometrics()
+        if (remainingAttempts <= 0) {
+            // Disable Biometrics
+            val currentConfiguration = configuratorProvider.currentConfiguration
+            configuratorProvider.updateConfiguration(currentConfiguration.copy(isBiometricsEnabled = false))
         }
     }
 

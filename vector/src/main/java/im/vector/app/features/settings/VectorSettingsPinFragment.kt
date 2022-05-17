@@ -67,7 +67,7 @@ class VectorSettingsPinFragment @Inject constructor(
             usePinCodePref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
                 if (hasPinCode) {
                     lifecycleScope.launch {
-                        pinCodeStore.deleteEncodedPin()
+                        pinCodeStore.deletePinCode()
                         refreshPinCodeStatus()
                     }
                 } else {

@@ -20,6 +20,8 @@ package im.vector.lockscreen.configuration
  * Configuration to be used by the lockscreen feature.
  */
 data class LockScreenConfiguration(
+        /** Which mode should the UI display, [LockScreenMode.VERIFY] or [LockScreenMode.CREATE]. */
+        val mode: LockScreenMode,
         /** Length in digits of the pin code. */
         val pinCodeLength: Int,
         /** Authentication with strong methods (fingerprint, some face/iris unlock implementations) is supported. */

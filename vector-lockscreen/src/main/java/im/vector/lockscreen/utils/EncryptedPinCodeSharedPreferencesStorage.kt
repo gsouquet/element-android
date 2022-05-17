@@ -40,6 +40,10 @@ class EncryptedPinCodeSharedPreferencesStorage @Inject constructor(
         sharedPreferences.edit().remove(KEY_PIN_CODE).apply()
     }
 
+    override suspend fun hasEncodedPin(): Boolean {
+        return sharedPreferences.contains(KEY_PIN_CODE)
+    }
+
     companion object {
         private const val KEY_PIN_CODE = "vector.encrypted_pin_code"
     }

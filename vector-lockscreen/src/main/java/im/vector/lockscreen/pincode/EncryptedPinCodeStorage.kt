@@ -35,4 +35,9 @@ interface EncryptedPinCodeStorage {
      * Deletes the PIN code from some persistable storage.
      */
     suspend fun deletePinCode()
+
+    /**
+     * Returns whether the encrypted PIN code is stored or not.
+     */
+    suspend fun hasEncodedPin(): Boolean
 }

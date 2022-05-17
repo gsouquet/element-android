@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.lockscreen.di
+package im.vector.app.core.di
 
 import com.airbnb.mvrx.MavericksState
 import com.airbnb.mvrx.MavericksViewModel
