@@ -3,9 +3,6 @@
     package="im.vector.lockscreen">
 
     <uses-permission android:name="android.permission.VIBRATE" />
-    <application>
-        <!-- Used for UI tests to display the BiometricPrompt -->
-        <activity android:exported="false" android:name=".tests.TestActivity" />
-    </application>
+    <application />
 
 </manifest>

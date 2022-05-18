@@ -68,19 +68,19 @@ class BiometricUtils(
     /**
      * Returns true if a weak biometric method (i.e.: some face or iris unlock implementations) can be used.
      */
-    val canUseWeakBiometricAuth: Boolean get()=
-        configuration.isFaceUnlockEnabled && biometricManager.canAuthenticate(BIOMETRIC_WEAK) == BIOMETRIC_SUCCESS
+    val canUseWeakBiometricAuth: Boolean get() =
+        configuration.isWeakBiometricsEnabled && biometricManager.canAuthenticate(BIOMETRIC_WEAK) == BIOMETRIC_SUCCESS
 
     /**
      * Returns true if a strong biometric method (i.e.: fingerprint, some face or iris unlock implementations) can be used.
      */
-    val canUseStrongBiometricAuth: Boolean get()=
-        configuration.isBiometricsEnabled && biometricManager.canAuthenticate(BIOMETRIC_STRONG) == BIOMETRIC_SUCCESS
+    val canUseStrongBiometricAuth: Boolean get() =
+        configuration.isStrongBiometricsEnabled && biometricManager.canAuthenticate(BIOMETRIC_STRONG) == BIOMETRIC_SUCCESS
 
     /**
      * Returns true if the device credentials can be used to unlock (system pin code, password, pattern, etc.).
      */
-    val canUseDeviceCredentialsAuth: Boolean get()=
+    val canUseDeviceCredentialsAuth: Boolean get() =
         configuration.isDeviceCredentialUnlockEnabled && biometricManager.canAuthenticate(DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
 
     /**
@@ -110,7 +110,9 @@ class BiometricUtils(
      * @return: A [Flow] that with the [Boolean] success/failure result or a [BiometricAuthError].
      */
     @MainThread
-    fun enableAuthentication(activity: FragmentActivity): Flow<Boolean> = authenticate(activity)
+    fun enableAuthentication(activity: FragmentActivity): Flow<Boolean> {
+        return authenticateInternal(activity, checkSystemKeyExists = false, cryptoObject = null)
+    }
 
     /**
      * Disables system authentication, removing the system key and cancelling the current [BiometricPrompt] if needed.
@@ -129,12 +131,7 @@ class BiometricUtils(
      */
     @MainThread
     fun authenticate(activity: FragmentActivity): Flow<Boolean> {
-        if (!isSystemAuthEnabled) return flowOf(false)
-
-        if (prompt != null) {
-            cancelPrompt()
-        }
-        return authenticateInternal(activity, null)
+        return authenticateInternal(activity, checkSystemKeyExists = true, cryptoObject = null)
     }
 
     /**
@@ -151,8 +148,15 @@ class BiometricUtils(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun authenticateInternal(
         activity: FragmentActivity,
+        checkSystemKeyExists: Boolean,
         cryptoObject: BiometricPrompt.CryptoObject? = null,
     ): Flow<Boolean> {
+        if (checkSystemKeyExists && !isSystemAuthEnabled) return flowOf(false)
+
+        if (prompt != null) {
+            cancelPrompt()
+        }
+
         val channel = Channel<Boolean>(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
         prompt = authenticateWithPromptInternal(activity, cryptoObject, channel)
         return flow {

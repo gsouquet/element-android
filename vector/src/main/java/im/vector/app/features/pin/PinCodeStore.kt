@@ -32,26 +32,15 @@ interface PinCodeStore: EncryptedPinCodeStorage {
     fun getRemainingPinCodeAttemptsNumber(): Int
 
     /**
-     * Returns the remaining biometric auth attempts. When this reaches 0 the biometric access won't be available for some time.
-     */
-    fun getRemainingBiometricsAttemptsNumber(): Int
-
-    /**
      * Should decrement the number of remaining PIN code attempts.
      * @return The remaining attempts.
      */
     fun onWrongPin(): Int
 
     /**
-     * Should decrement the number of remaining biometric attempts.
-     * @return The remaining attempts.
-     */
-    fun onWrongBiometrics(): Int
-
-    /**
      * Resets the counter of attempts for PIN code and biometric access.
      */
-    fun resetCounters()
+    fun resetCounter()
 
     /**
      * Adds a listener to be notified when the PIN code us created or removed.
@@ -88,7 +77,7 @@ class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: 
     override suspend fun deletePinCode() {
         withContext(Dispatchers.IO) {
             // Also reset the counters
-            resetCounters()
+            resetCounter()
             sharedPreferences.edit {
                 remove(ENCODED_PIN_CODE_KEY)
             }
@@ -105,10 +94,6 @@ class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: 
         return sharedPreferences.getInt(REMAINING_PIN_CODE_ATTEMPTS_KEY, MAX_PIN_CODE_ATTEMPTS_NUMBER_BEFORE_LOGOUT)
     }
 
-    override fun getRemainingBiometricsAttemptsNumber(): Int {
-        return sharedPreferences.getInt(REMAINING_BIOMETRICS_ATTEMPTS_KEY, MAX_BIOMETRIC_ATTEMPTS_NUMBER_BEFORE_FORCE_PIN)
-    }
-
     override fun onWrongPin(): Int {
         val remaining = getRemainingPinCodeAttemptsNumber() - 1
         sharedPreferences.edit {
@@ -117,15 +102,7 @@ class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: 
         return remaining
     }
 
-    override fun onWrongBiometrics(): Int {
-        val remaining = getRemainingBiometricsAttemptsNumber() - 1
-        sharedPreferences.edit {
-            putInt(REMAINING_BIOMETRICS_ATTEMPTS_KEY, remaining)
-        }
-        return remaining
-    }
-
-    override fun resetCounters() {
+    override fun resetCounter() {
         sharedPreferences.edit {
             remove(REMAINING_PIN_CODE_ATTEMPTS_KEY)
             remove(REMAINING_BIOMETRICS_ATTEMPTS_KEY)
@@ -146,6 +123,5 @@ class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: 
         private const val REMAINING_BIOMETRICS_ATTEMPTS_KEY = "REMAINING_BIOMETRICS_ATTEMPTS_KEY"
 
         private const val MAX_PIN_CODE_ATTEMPTS_NUMBER_BEFORE_LOGOUT = 3
-        private const val MAX_BIOMETRIC_ATTEMPTS_NUMBER_BEFORE_FORCE_PIN = 5
     }
 }

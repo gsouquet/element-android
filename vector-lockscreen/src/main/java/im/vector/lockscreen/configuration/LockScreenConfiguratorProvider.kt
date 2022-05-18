@@ -29,7 +29,7 @@ class LockScreenConfiguratorProvider @Inject constructor(
     private val mutableConfigurationFlow = MutableStateFlow(initialConfiguration)
     val configurationFlow: Flow<LockScreenConfiguration> = mutableConfigurationFlow
 
-    val currentConfiguration = mutableConfigurationFlow.value
+    val currentConfiguration get()= mutableConfigurationFlow.value
 
     fun updateConfiguration(configuration: LockScreenConfiguration) {
         mutableConfigurationFlow.value = configuration

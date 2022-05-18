@@ -25,6 +25,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import im.vector.app.features.pin.PinCodeStore
 import im.vector.lockscreen.biometrics.BiometricUtils
 import im.vector.lockscreen.configuration.LockScreenConfiguration
 import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
@@ -33,7 +34,6 @@ import im.vector.lockscreen.crypto.KeyHelper
 import im.vector.lockscreen.fragments.VectorLockScreenViewModel
 import im.vector.lockscreen.pincode.EncryptedPinCodeStorage
 import im.vector.lockscreen.pincode.PinCodeUtils
-import im.vector.lockscreen.utils.EncryptedPinCodeSharedPreferencesStorage
 import javax.inject.Singleton
 
 @Module
@@ -44,9 +44,9 @@ object LockScreenModule {
     fun provideLockScreenConfig() = LockScreenConfiguration(
             mode = LockScreenMode.VERIFY,
             pinCodeLength = 4,
-            isFaceUnlockEnabled = false,
+            isWeakBiometricsEnabled = false,
             isDeviceCredentialUnlockEnabled = false,
-            isBiometricsEnabled = true,
+            isStrongBiometricsEnabled = true,
             needsNewCodeValidation = true,
     )
 
@@ -81,6 +81,6 @@ interface LockScreenBindsModule {
     fun bindLockScreenViewModel(factory: VectorLockScreenViewModel.Factory): MavericksAssistedViewModelFactory<*, *>
 
     @Binds
-    fun bindSharedPreferencesStorage(storage: EncryptedPinCodeSharedPreferencesStorage): EncryptedPinCodeStorage
+    fun bindSharedPreferencesStorage(pinCodeStore: PinCodeStore): EncryptedPinCodeStorage
 
 }

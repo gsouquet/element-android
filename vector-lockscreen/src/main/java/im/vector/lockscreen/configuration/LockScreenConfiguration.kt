@@ -25,9 +25,9 @@ data class LockScreenConfiguration(
         /** Length in digits of the pin code. */
         val pinCodeLength: Int,
         /** Authentication with strong methods (fingerprint, some face/iris unlock implementations) is supported. */
-        val isBiometricsEnabled: Boolean,
+        val isStrongBiometricsEnabled: Boolean,
         /** Authentication with weak methods (most face/iris unlock implementations) is supported. */
-        val isFaceUnlockEnabled: Boolean,
+        val isWeakBiometricsEnabled: Boolean,
         /** Authentication with device credentials (system lockscreen pin code, password, pattern) is supported. */
         val isDeviceCredentialUnlockEnabled: Boolean,
         /** New pin code creation needs to be inputted twice for confirmation. */

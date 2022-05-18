@@ -25,6 +25,8 @@ import androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import im.vector.lockscreen.configuration.LockScreenConfiguration
+import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
+import im.vector.lockscreen.configuration.LockScreenMode
 import im.vector.lockscreen.crypto.KeyHelper
 import im.vector.lockscreen.fragments.FallbackBiometricDialogFragment
 import im.vector.lockscreen.tests.TestActivity
@@ -197,10 +199,12 @@ class BiometricUtilsTests {
 
     private fun createBiometricUtils(configuration: LockScreenConfiguration): BiometricUtils {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        return BiometricUtils(context, keyHelper, configuration, biometricManager)
+        val configProvider = LockScreenConfiguratorProvider(configuration)
+        return BiometricUtils(context, keyHelper, configProvider, biometricManager)
     }
 
     private fun createDefaultConfiguration(
+            mode: LockScreenMode = LockScreenMode.VERIFY,
             pinCodeLength: Int = 4,
             isBiometricsEnabled: Boolean = false,
             isFaceUnlockEnabled: Boolean = false,
@@ -208,6 +212,7 @@ class BiometricUtilsTests {
             needsNewCodeValidation: Boolean = false,
             otherChanges: LockScreenConfiguration.() -> LockScreenConfiguration = { this },
     ): LockScreenConfiguration = LockScreenConfiguration(
+            mode,
             pinCodeLength,
             isBiometricsEnabled,
             isFaceUnlockEnabled,

@@ -33,7 +33,7 @@ import im.vector.lockscreen.crypto.KeyHelper
 import im.vector.lockscreen.fragments.VectorLockScreenViewModel
 import im.vector.lockscreen.pincode.EncryptedPinCodeStorage
 import im.vector.lockscreen.pincode.PinCodeUtils
-import im.vector.lockscreen.utils.EncryptedPinCodeSharedPreferencesStorage
+import im.vector.lockscreen.sample.utils.EncryptedPinCodeSharedPreferencesStorage
 import javax.inject.Singleton
 
 @Module
@@ -44,9 +44,9 @@ object LockScreenModule {
     fun provideLockScreenConfig() = LockScreenConfiguration(
             mode = LockScreenMode.VERIFY,
             pinCodeLength = 4,
-            isFaceUnlockEnabled = true,
+            isWeakBiometricsEnabled = true,
             isDeviceCredentialUnlockEnabled = true,
-            isBiometricsEnabled = true,
+            isStrongBiometricsEnabled = true,
             needsNewCodeValidation = true,
     )
 

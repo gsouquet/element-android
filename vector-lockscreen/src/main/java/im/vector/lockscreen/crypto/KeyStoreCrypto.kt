@@ -91,7 +91,7 @@ interface KeyStoreCrypto {
      * Check if the key associated with the [alias] is valid.
      */
     fun hasValidKey(): Boolean {
-        val hasKey = getKeyStore().containsAlias(alias)
+        val hasKey = keyStore.containsAlias(alias)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 initialize()
@@ -110,17 +110,17 @@ interface KeyStoreCrypto {
          * Checks if the Android KeyStore contains the passed [alias].
          */
         fun containsKey(alias: String) = runCatching {
-            getKeyStore().containsAlias(alias)
+            keyStore.containsAlias(alias)
         }.getOrDefault(false)
 
         /**
          * Removes the passed [alias] from the Android KeyStore.
          */
         fun deleteKey(alias: String) = runCatching {
-            getKeyStore().deleteEntry(alias)
+            keyStore.deleteEntry(alias)
         }.isSuccess
 
-        internal fun getKeyStore() = KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
+        private val keyStore by lazy { KeyStore.getInstance(ANDROID_KEY_STORE).also { it.load(null) } }
     }
 
 }

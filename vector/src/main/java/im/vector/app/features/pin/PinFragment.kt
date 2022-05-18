@@ -33,6 +33,7 @@ import im.vector.app.databinding.FragmentPinBinding
 import im.vector.app.features.MainActivity
 import im.vector.app.features.MainActivityArgs
 import im.vector.app.features.settings.VectorPreferences
+import im.vector.lockscreen.biometrics.BiometricAuthError
 import im.vector.lockscreen.configuration.LockScreenConfiguration
 import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.lockscreen.configuration.LockScreenMode
@@ -94,36 +95,39 @@ class PinFragment @Inject constructor(
 
     private fun showAuthFragment() {
         val authFragment = VectorLockScreenFragment()
-        val canUseBiometrics = pinCodeStore.getRemainingBiometricsAttemptsNumber() > 0
-//        val builder = PFFLockScreenConfiguration.Builder(requireContext())
-//                .setAutoShowBiometric(true)
-//                .setUseBiometric(vectorPreferences.useBiometricsToUnlock() && canUseBiometrics)
-//                .setAutoShowBiometric(canUseBiometrics)
-//                .setTitle(getString(R.string.auth_pin_title))
-//                .setLeftButton(getString(R.string.auth_pin_forgot))
-//                .setClearCodeOnError(true)
-//                .setMode(PFFLockScreenConfiguration.MODE_AUTH)
-//        authFragment.setConfiguration(builder.build())
-//        authFragment.setEncodedPinCode(encodedPin)
+        val canUseBiometrics = vectorPreferences.useBiometricsToUnlock()
         authFragment.onLeftButtonClickedListener = View.OnClickListener { displayForgotPinWarningDialog() }
         authFragment.lockScreenListener = object: LockScreenListener() {
             override fun onAuthenticationFailure(authMethod: AuthMethod) {
                 when (authMethod) {
                     AuthMethod.PIN_CODE -> onWrongPin()
-                    AuthMethod.BIOMETRICS -> onWrongBiometricAuth(authFragment)
+                    AuthMethod.BIOMETRICS -> Unit
                 }
             }
 
             override fun onAuthenticationSuccess(authMethod: AuthMethod) {
-                pinCodeStore.resetCounters()
+                pinCodeStore.resetCounter()
                 vectorBaseActivity.setResult(Activity.RESULT_OK)
                 vectorBaseActivity.finish()
+            }
+
+            override fun onAuthenticationError(authMethod: AuthMethod, throwable: Throwable) {
+                super.onAuthenticationError(authMethod, throwable)
+                if (throwable is BiometricAuthError) {
+                    // System disabled biometric auth, no need to do it ourselves too
+                    if (throwable.isAuthDisabledError) {
+                        pinCodeStore.resetCounter()
+                    }
+                    Toast.makeText(requireContext(), throwable.localizedMessage, Toast.LENGTH_SHORT).show()
+                }
             }
         }
         val configuration = defaultLockScreenConfiguration.copy(
                 mode = LockScreenMode.VERIFY,
                 title = getString(R.string.auth_pin_title),
-                isBiometricsEnabled = vectorPreferences.useBiometricsToUnlock() && canUseBiometrics,
+                isStrongBiometricsEnabled = defaultLockScreenConfiguration.isStrongBiometricsEnabled && canUseBiometrics,
+                isWeakBiometricsEnabled = defaultLockScreenConfiguration.isWeakBiometricsEnabled && canUseBiometrics,
+                isDeviceCredentialUnlockEnabled = defaultLockScreenConfiguration.isDeviceCredentialUnlockEnabled && canUseBiometrics,
                 autoStartBiometric = canUseBiometrics,
                 leftButtonTitle = getString(R.string.auth_pin_forgot),
                 clearCodeOnError = true,
@@ -144,15 +148,6 @@ class PinFragment @Inject constructor(
                 // Logout
                 MainActivity.restartApp(requireActivity(), MainActivityArgs(clearCredentials = true))
             }
-        }
-    }
-
-    private fun onWrongBiometricAuth(authFragment: VectorLockScreenFragment) {
-        val remainingAttempts = pinCodeStore.onWrongBiometrics()
-        if (remainingAttempts <= 0) {
-            // Disable Biometrics
-            val currentConfiguration = configuratorProvider.currentConfiguration
-            configuratorProvider.updateConfiguration(currentConfiguration.copy(isBiometricsEnabled = false))
         }
     }
 

@@ -23,11 +23,14 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldNotBeEqualTo
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.security.KeyStore
 
 class KeyHelperTests {
 
@@ -36,7 +39,6 @@ class KeyHelperTests {
     @Before
     fun setup() {
         mockkObject(KeyStoreCryptoCompat)
-        mockkObject(LegacyKeyMigrator)
 
         TestUtils.deleteKeyAlias("base.pin_code")
         TestUtils.deleteKeyAlias("base.system")
@@ -47,12 +49,18 @@ class KeyHelperTests {
     @After
     fun tearDown() {
         unmockkObject(KeyStoreCryptoCompat)
-        unmockkObject(LegacyKeyMigrator)
     }
 
     @Test
-    fun whenKeyHelperIsInitializedLegacyMigrationHappens() {
-        verify { LegacyKeyMigrator.migrateIfNeeded(any()) }
+    fun whenLegacyPinCodeKeyIsDeletedNewAliasWillBeUsed() {
+        createLegacyKey()
+        KeyStoreCrypto.containsKey(KeyHelper.LEGACY_PIN_CODE_KEY_ALIAS).shouldBeTrue()
+        val systemKeyCrypto = keyHelper.getSystemKey()
+        systemKeyCrypto.alias shouldBeEqualTo KeyHelper.LEGACY_PIN_CODE_KEY_ALIAS
+        KeyStoreCrypto.deleteKey(systemKeyCrypto.alias)
+
+        val newSystemCrypto = keyHelper.getSystemKey()
+        newSystemCrypto.alias shouldBeEqualTo "base.system"
     }
 
     @Test
@@ -128,6 +136,14 @@ class KeyHelperTests {
     private fun createSystemKey(): KeyStoreCrypto = keyHelper.getSystemKey {
         // We need to disable this for UI tests since the test device probably won't have any enrolled biometric methods
         setUserAuthenticationRequired(false)
+    }
+
+    private fun createLegacyKey() {
+        val legacyKeyCrypto = KeyStoreCryptoCompat.create(
+                InstrumentationRegistry.getInstrumentation().context,
+                KeyHelper.LEGACY_PIN_CODE_KEY_ALIAS
+        )
+        legacyKeyCrypto.initialize()
     }
 
 }

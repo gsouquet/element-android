@@ -26,14 +26,13 @@ import com.airbnb.mvrx.withState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import dagger.hilt.EntryPoints
 import im.vector.lockscreen.biometrics.BiometricUtils
 import im.vector.lockscreen.configuration.LockScreenConfiguration
 import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.lockscreen.configuration.LockScreenMode
 import im.vector.app.core.di.MavericksAssistedViewModelFactory
-import im.vector.app.core.di.SingletonEntryPoint
 import im.vector.app.core.di.hiltMavericksViewModelFactory
+import im.vector.lockscreen.biometrics.BiometricAuthError
 import im.vector.lockscreen.pincode.PinCodeUtils
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -48,7 +47,7 @@ class VectorLockScreenViewModel @AssistedInject constructor(
         @Assisted val initialState: VectorLockScreenViewState,
         private val pinCodeUtils: PinCodeUtils,
         private val biometricUtils: BiometricUtils,
-        private val configuratorProvider: LockScreenConfiguratorProvider,
+        configuratorProvider: LockScreenConfiguratorProvider,
 ): MavericksViewModel<VectorLockScreenViewState>(initialState) {
 
     @AssistedFactory
@@ -59,21 +58,32 @@ class VectorLockScreenViewModel @AssistedInject constructor(
     companion object : MavericksViewModelFactory<VectorLockScreenViewModel, VectorLockScreenViewState> by hiltMavericksViewModelFactory() {
 
         override fun initialState(viewModelContext: ViewModelContext): VectorLockScreenViewState {
-            val entryPoint = EntryPoints.get(viewModelContext.app(), SingletonEntryPoint::class.java)
             return VectorLockScreenViewState(
-                    lockScreenConfiguration = entryPoint.lockScreenConfiguration(),
+                    lockScreenConfiguration = DUMMY_CONFIGURATION,
                     canUseBiometricAuth = false,
                     showBiometricPromptAutomatically = false,
                     pinCodeState = PinCodeState.Idle,
                     isBiometricKeyInvalidated = false,
             )
         }
+
+        private val DUMMY_CONFIGURATION = LockScreenConfiguration(
+                mode = LockScreenMode.VERIFY,
+                pinCodeLength = 4,
+                isStrongBiometricsEnabled = false,
+                isDeviceCredentialUnlockEnabled = false,
+                isWeakBiometricsEnabled = false,
+                needsNewCodeValidation = false,
+        )
     }
 
     private var firstEnteredCode: String? = null
 
     private val mutableViewEventsFlow = MutableSharedFlow<VectorLockScreenViewEvent>(replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val viewEvent: Flow<VectorLockScreenViewEvent> = mutableViewEventsFlow
+
+    // BiometricPrompt will automatically disable system auth after too many failed auth attempts
+    private var isSystemAuthTemporarilyDisabledByBiometricPrompt = false
 
     init {
         configuratorProvider.configurationFlow
@@ -122,6 +132,9 @@ class VectorLockScreenViewModel @AssistedInject constructor(
     }.catch { error ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error is KeyPermanentlyInvalidatedException) {
             disableBiometricAuthentication()
+        } else if (error is BiometricAuthError && error.isAuthDisabledError) {
+            isSystemAuthTemporarilyDisabledByBiometricPrompt = true
+            updateStateWithBiometricInfo()
         }
         mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, error))
     }.onEach { success ->
@@ -139,6 +152,7 @@ class VectorLockScreenViewModel @AssistedInject constructor(
     private fun updateStateWithBiometricInfo() {
         val configuration = withState(this) { it.lockScreenConfiguration }
         val canUseBiometricAuth = configuration.mode == LockScreenMode.VERIFY
+                && !isSystemAuthTemporarilyDisabledByBiometricPrompt
                 && biometricUtils.isSystemAuthEnabled
         val isBiometricKeyInvalidated = biometricUtils.hasSystemKey && !biometricUtils.isSystemKeyValid
         val showBiometricPromptAutomatically = canUseBiometricAuth

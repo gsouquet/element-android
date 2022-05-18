@@ -16,7 +16,7 @@
 
 @file:Suppress("DEPRECATION")
 
-package im.vector.lockscreen.utils
+package im.vector.lockscreen.sample.utils
 
 import android.content.Context
 import android.preference.PreferenceManager
@@ -30,7 +30,9 @@ class EncryptedPinCodeSharedPreferencesStorage @Inject constructor(
 
     private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
 
-    override suspend fun getPinCode(): String? = sharedPreferences.getString(KEY_PIN_CODE, null)
+    override suspend fun getPinCode(): String? {
+        return sharedPreferences.getString(KEY_PIN_CODE, null)
+    }
 
     override suspend fun savePinCode(pinCode: String) {
         sharedPreferences.edit().putString(KEY_PIN_CODE, pinCode).apply()
