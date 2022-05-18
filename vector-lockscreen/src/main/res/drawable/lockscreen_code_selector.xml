@@ -3,7 +3,7 @@
     <!-- NOTE: order is important (the first matching state(s) is what is rendered) -->
     <item
         android:state_checked="true"
-        android:drawable="@drawable/circle_code_fill_pf_lockscreen"/>
+        android:drawable="@drawable/lockscreen_circle_code_fill"/>
     <item
-        android:drawable="@drawable/circle_code_empty_pf_lockscreen"/>
+        android:drawable="@drawable/lockscreen_circle_code_empty"/>
 </selector>

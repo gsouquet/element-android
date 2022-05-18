@@ -337,7 +337,6 @@ android {
 
 dependencies {
     implementation project(":vector-config")
-    implementation project(":vector-lockscreen")
     implementation project(":matrix-sdk-android")
     implementation project(":matrix-sdk-android-flow")
     implementation project(":library:jsonviewer")
@@ -419,7 +418,6 @@ dependencies {
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
     implementation libs.androidx.autoFill
     implementation 'jp.wasabeef:glide-transformations:4.3.0'
-//    implementation 'com.github.vector-im:PFLockScreen-Android:1.0.0-beta12'
     implementation 'com.github.hyuwah:DraggableView:1.0.0'
 
     // Custom Tab
@@ -548,5 +546,6 @@ dependencies {
     androidTestImplementation('com.adevinta.android:barista:4.2.0') {
         exclude group: 'org.jetbrains.kotlin'
     }
+    androidTestImplementation libs.mockk.mockkAndroid
     androidTestUtil libs.androidx.orchestrator
 }

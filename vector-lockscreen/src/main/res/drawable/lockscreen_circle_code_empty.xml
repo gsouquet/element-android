@@ -4,10 +4,10 @@
     android:shape="oval">
 
     <stroke
-        android:color="@color/code_lock_screen_pf"
+        android:color="@color/lockscreen_code"
         android:width="1px"/>
 
     <size
-        android:width="@dimen/code_size"
-        android:height="@dimen/code_size"/>
+        android:width="@dimen/lockscreen_code_size"
+        android:height="@dimen/lockscreen_code_size"/>
 </shape>

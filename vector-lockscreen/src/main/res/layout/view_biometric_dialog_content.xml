@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:text="@string/fingerprint_description_pf"
+        android:text="@string/lockscreen_fingerprint_description"
         android:textAppearance="@android:style/TextAppearance.Material.Subhead"
         android:textColor="?android:attr/textColorSecondary"/>
 
@@ -27,8 +27,8 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/fingerprint_description"
         android:layout_marginTop="20dp"
-        android:src="@drawable/ic_fp_40px_pf"
-        android:contentDescription="@string/description_fingerprint_icon_pf"/>
+        android:src="@drawable/lockscreen_fingerprint_40"
+        android:contentDescription="@string/lockscreen_description_fingerprint_icon"/>
 
     <TextView
         android:id="@+id/fingerprint_status"
@@ -40,6 +40,6 @@
         android:layout_marginStart="16dp"
         android:layout_toEndOf="@+id/fingerprint_icon"
         android:gravity="center_vertical"
-        android:text="@string/fingerprint_hint_pf"
-        android:textColor="@color/hint_color" />
+        android:text="@string/lockscreen_fingerprint_hint"
+        android:textColor="@color/lockscreen_hint_color" />
 </RelativeLayout>

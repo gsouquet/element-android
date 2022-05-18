@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="button_lock_screen_size">70dp</dimen>
-    <dimen name="button_lock_screen_margin_vertical">25dp</dimen>
-    <dimen name="code_size">10dp</dimen>
-    <dimen name="code_margin">5dp</dimen>
+    <dimen name="lockscreen_button_size">70dp</dimen>
+    <dimen name="lockscreen_button_margin_vertical">25dp</dimen>
+    <dimen name="lockscreen_code_size">10dp</dimen>
+    <dimen name="lockscreen_code_margin">5dp</dimen>
 </resources>
