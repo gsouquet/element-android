@@ -17,7 +17,7 @@
     </style>
 
     <style name="LockScreenDeleteButtonStyle">
-        <item name="android:src">@drawable/lockscreen_delete_lockscreen</item>
+        <item name="android:src">@drawable/lockscreen_delete</item>
         <item name="android:padding">20dp</item>
     </style>
 

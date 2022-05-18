@@ -26,14 +26,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import im.vector.app.features.pin.PinCodeStore
-import im.vector.lockscreen.biometrics.BiometricUtils
-import im.vector.lockscreen.configuration.LockScreenConfiguration
-import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
-import im.vector.lockscreen.configuration.LockScreenMode
-import im.vector.lockscreen.crypto.KeyHelper
-import im.vector.lockscreen.fragments.VectorLockScreenViewModel
-import im.vector.lockscreen.pincode.EncryptedPinCodeStorage
-import im.vector.lockscreen.pincode.PinCodeUtils
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricUtils
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
+import im.vector.app.features.pin.lockscreen.crypto.KeyHelper
+import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenViewModel
+import im.vector.app.features.pin.lockscreen.pincode.EncryptedPinCodeStorage
+import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
 import javax.inject.Singleton
 
 @Module

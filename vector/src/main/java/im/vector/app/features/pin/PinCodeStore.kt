@@ -18,7 +18,7 @@ package im.vector.app.features.pin
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import im.vector.lockscreen.pincode.EncryptedPinCodeStorage
+import im.vector.app.features.pin.lockscreen.pincode.EncryptedPinCodeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

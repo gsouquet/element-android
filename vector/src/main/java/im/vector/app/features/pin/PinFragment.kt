@@ -32,14 +32,13 @@ import im.vector.app.core.utils.toast
 import im.vector.app.databinding.FragmentPinBinding
 import im.vector.app.features.MainActivity
 import im.vector.app.features.MainActivityArgs
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricAuthError
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
+import im.vector.app.features.pin.lockscreen.fragments.AuthMethod
+import im.vector.app.features.pin.lockscreen.fragments.LockScreenListener
+import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenFragment
 import im.vector.app.features.settings.VectorPreferences
-import im.vector.lockscreen.biometrics.BiometricAuthError
-import im.vector.lockscreen.configuration.LockScreenConfiguration
-import im.vector.lockscreen.configuration.LockScreenConfiguratorProvider
-import im.vector.lockscreen.configuration.LockScreenMode
-import im.vector.lockscreen.fragments.AuthMethod
-import im.vector.lockscreen.fragments.LockScreenListener
-import im.vector.lockscreen.fragments.VectorLockScreenFragment
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
@@ -51,7 +50,6 @@ data class PinArgs(
 class PinFragment @Inject constructor(
         private val pinCodeStore: PinCodeStore,
         private val vectorPreferences: VectorPreferences,
-        private val defaultLockScreenConfiguration: LockScreenConfiguration,
         private val configuratorProvider: LockScreenConfiguratorProvider,
 ) : VectorBaseFragment<FragmentPinBinding>() {
 
@@ -83,13 +81,14 @@ class PinFragment @Inject constructor(
             }
         }
 
-        val configuration = defaultLockScreenConfiguration.copy(
-                mode = LockScreenMode.CREATE,
-                title = getString(R.string.create_pin_title),
-                needsNewCodeValidation = true,
-                newCodeConfirmationTitle = getString(R.string.create_pin_confirm_title),
-        )
-        configuratorProvider.updateConfiguration(configuration)
+        configuratorProvider.updateDefaultConfiguration {
+            copy(
+                    mode = LockScreenMode.CREATE,
+                    title = getString(R.string.create_pin_title),
+                    needsNewCodeValidation = true,
+                    newCodeConfirmationTitle = getString(R.string.create_pin_confirm_title),
+            )
+        }
         replaceFragment(R.id.pinFragmentContainer, createFragment)
     }
 
@@ -122,17 +121,18 @@ class PinFragment @Inject constructor(
                 }
             }
         }
-        val configuration = defaultLockScreenConfiguration.copy(
-                mode = LockScreenMode.VERIFY,
-                title = getString(R.string.auth_pin_title),
-                isStrongBiometricsEnabled = defaultLockScreenConfiguration.isStrongBiometricsEnabled && canUseBiometrics,
-                isWeakBiometricsEnabled = defaultLockScreenConfiguration.isWeakBiometricsEnabled && canUseBiometrics,
-                isDeviceCredentialUnlockEnabled = defaultLockScreenConfiguration.isDeviceCredentialUnlockEnabled && canUseBiometrics,
-                autoStartBiometric = canUseBiometrics,
-                leftButtonTitle = getString(R.string.auth_pin_forgot),
-                clearCodeOnError = true,
-        )
-        configuratorProvider.updateConfiguration(configuration)
+        configuratorProvider.updateDefaultConfiguration {
+            copy(
+                    mode = LockScreenMode.VERIFY,
+                    title = getString(R.string.auth_pin_title),
+                    isStrongBiometricsEnabled = isStrongBiometricsEnabled && canUseBiometrics,
+                    isWeakBiometricsEnabled = isWeakBiometricsEnabled && canUseBiometrics,
+                    isDeviceCredentialUnlockEnabled = isDeviceCredentialUnlockEnabled && canUseBiometrics,
+                    autoStartBiometric = canUseBiometrics,
+                    leftButtonTitle = getString(R.string.auth_pin_forgot),
+                    clearCodeOnError = true,
+            )
+        }
         replaceFragment(R.id.pinFragmentContainer, authFragment)
     }
 

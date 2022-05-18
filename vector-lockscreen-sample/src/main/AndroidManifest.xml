@@ -1,13 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="im.vector.lockscreen.sample">
+    package="im.vector.app.features.pin.lockscreen.sample">
 
     <uses-permission android:name="android.permission.VIBRATE" />
-    <application android:name=".TestApplication"
+    <application android:name="im.vector.app.features.pin.lockscreen.sample.TestApplication"
         android:label="@string/app_name_pf"
         android:icon="@drawable/fingerprint_dialog_fp_icon"
         android:theme="@style/Theme.AppCompat.DayNight">
-        <activity android:exported="true" android:name=".TestActivity">
+        <activity android:exported="true" android:name="im.vector.app.features.pin.lockscreen.sample.TestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

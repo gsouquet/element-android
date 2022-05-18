@@ -27,9 +27,11 @@ import im.vector.app.features.navigation.Navigator
 import im.vector.app.features.notifications.NotificationDrawerManager
 import im.vector.app.features.pin.PinCodeStore
 import im.vector.app.features.pin.PinMode
-import im.vector.lockscreen.biometrics.BiometricUtils
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricUtils
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.matrix.android.sdk.api.extensions.orFalse
+import timber.log.Timber
 import javax.inject.Inject
 
 class VectorSettingsPinFragment @Inject constructor(
@@ -58,14 +60,29 @@ class VectorSettingsPinFragment @Inject constructor(
         findPreference<SwitchPreference>(VectorPreferences.SETTINGS_SECURITY_USE_BIOMETRICS_FLAG)!!
     }
 
+    private fun shouldCheckBiometricPref(isPinCodeChecked: Boolean): Boolean {
+        return isPinCodeChecked // Biometric auth depends on PIN auth
+                && biometricUtils.isSystemAuthEnabled
+                && biometricUtils.isSystemKeyValid
+    }
+
     override fun onResume() {
         super.onResume()
 
-        useBiometricPref.isChecked = biometricUtils.isSystemAuthEnabled && biometricUtils.isSystemKeyValid
+        useBiometricPref.isChecked = shouldCheckBiometricPref(usePinCodePref.isChecked)
     }
 
     override fun bindPref() {
         refreshPinCodeStatus()
+
+        usePinCodePref.setOnPreferenceChangeListener { _, value ->
+            val isChecked = (value as? Boolean).orFalse()
+            useBiometricPref.isChecked = shouldCheckBiometricPref(isChecked)
+            if (!isChecked) {
+                disableBiometricAuthentication()
+            }
+            true
+        }
 
         useCompleteNotificationPref.setOnPreferenceChangeListener { _, _ ->
             // Refresh the drawer for an immediate effect of this change
@@ -80,14 +97,19 @@ class VectorSettingsPinFragment @Inject constructor(
                             .onFailure {
                                 showEnableBiometricErrorMessage()
                             }
-                    useBiometricPref.isChecked = biometricUtils.isSystemAuthEnabled && biometricUtils.isSystemKeyValid
+                    useBiometricPref.isChecked = shouldCheckBiometricPref(usePinCodePref.isChecked)
                 }
                 false
             } else {
-                biometricUtils.disableAuthentication()
+                disableBiometricAuthentication()
                 true
             }
         }
+    }
+
+    private fun disableBiometricAuthentication() {
+        runCatching { biometricUtils.disableAuthentication() }
+                .onFailure { Timber.e(it) }
     }
 
     private fun refreshPinCodeStatus() {
