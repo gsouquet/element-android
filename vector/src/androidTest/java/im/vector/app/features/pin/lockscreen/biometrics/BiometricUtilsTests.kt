@@ -16,7 +16,6 @@
 
 package im.vector.app.features.pin.lockscreen.biometrics
 
-import android.content.ComponentName
 import android.content.Intent
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -30,7 +29,7 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfigurati
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.crypto.KeyHelper
-import im.vector.app.features.pin.lockscreen.fragments.FallbackBiometricDialogFragment
+import im.vector.app.features.pin.lockscreen.ui.FallbackBiometricDialogFragment
 import im.vector.app.features.pin.lockscreen.tests.TestActivity
 import im.vector.app.features.pin.lockscreen.utils.DevicePromptCheck
 import io.mockk.clearAllMocks

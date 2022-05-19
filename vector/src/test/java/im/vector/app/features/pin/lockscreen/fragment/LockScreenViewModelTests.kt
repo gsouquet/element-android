@@ -25,11 +25,12 @@ import im.vector.app.features.pin.lockscreen.biometrics.BiometricUtils
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
-import im.vector.app.features.pin.lockscreen.fragments.AuthMethod
-import im.vector.app.features.pin.lockscreen.fragments.PinCodeState
-import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenViewEvent
-import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenViewModel
-import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenViewState
+import im.vector.app.features.pin.lockscreen.ui.AuthMethod
+import im.vector.app.features.pin.lockscreen.ui.LockScreenAction
+import im.vector.app.features.pin.lockscreen.ui.PinCodeState
+import im.vector.app.features.pin.lockscreen.ui.LockScreenViewEvent
+import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
+import im.vector.app.features.pin.lockscreen.ui.LockScreenViewState
 import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
 import im.vector.app.features.pin.lockscreen.test.AndroidVersionTestOverrider
 import im.vector.app.test.test
@@ -39,8 +40,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
@@ -50,7 +49,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class VectorLockScreenViewModelTests {
+class LockScreenViewModelTests {
 
     @get:Rule
     val mvrxTestRule = MvRxTestRule()
@@ -69,7 +68,7 @@ class VectorLockScreenViewModelTests {
         val configProvider = LockScreenConfiguratorProvider(createDefaultConfiguration())
         // This should set canUseBiometricAuth to true
         every { biometricUtils.isSystemAuthEnabled } returns true
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
         val newState = withState(viewModel) { it }
         initialState shouldNotBeEqualTo newState
     }
@@ -78,21 +77,21 @@ class VectorLockScreenViewModelTests {
     fun `when onPinCodeEntered is called in VERIFY mode, the code is verified and the result is emitted as a ViewEvent`() = runTest {
         val initialState = createViewState()
         val configProvider = LockScreenConfiguratorProvider(createDefaultConfiguration())
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
         coEvery { pinCodeUtils.verifyPinCode(any()) } returns true
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
         val stateBefore = viewModel.awaitState()
 
-        viewModel.onPinCodeEntered("1234")
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
         coVerify { pinCodeUtils.verifyPinCode(any()) }
-        events.assertValues(VectorLockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE))
+        events.assertValues(LockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE))
 
         coEvery { pinCodeUtils.verifyPinCode(any()) } returns false
-        viewModel.onPinCodeEntered("1234")
-        events.assertValues(VectorLockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE), VectorLockScreenViewEvent.AuthFailure(AuthMethod.PIN_CODE))
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
+        events.assertValues(LockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE), LockScreenViewEvent.AuthFailure(AuthMethod.PIN_CODE))
 
         val stateAfter = viewModel.awaitState()
         stateBefore shouldBeEqualTo stateAfter
@@ -103,15 +102,15 @@ class VectorLockScreenViewModelTests {
         val configuration = createDefaultConfiguration(mode = LockScreenMode.CREATE, needsNewCodeValidation = false)
         val initialState = createViewState(lockScreenConfiguration = configuration)
         val configProvider = LockScreenConfiguratorProvider(configuration)
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.onPinCodeEntered("1234")
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
         coVerify { pinCodeUtils.createPinCode(any()) }
 
-        events.assertValues(VectorLockScreenViewEvent.CodeCreationComplete)
+        events.assertValues(LockScreenViewEvent.CodeCreationComplete)
     }
 
     @Test
@@ -119,19 +118,19 @@ class VectorLockScreenViewModelTests {
         val configuration = createDefaultConfiguration(mode = LockScreenMode.CREATE, needsNewCodeValidation = true)
         val configProvider = LockScreenConfiguratorProvider(configuration)
         val initialState = createViewState(lockScreenConfiguration = configuration)
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.onPinCodeEntered("1234")
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
 
-        events.assertValues(VectorLockScreenViewEvent.ClearPinCode(false))
+        events.assertValues(LockScreenViewEvent.ClearPinCode(false))
         val pinCodeState = viewModel.awaitState().pinCodeState
         pinCodeState shouldBeEqualTo PinCodeState.FirstCodeEntered
 
-        viewModel.onPinCodeEntered("1234")
-        events.assertValues(VectorLockScreenViewEvent.ClearPinCode(false), VectorLockScreenViewEvent.CodeCreationComplete)
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
+        events.assertValues(LockScreenViewEvent.ClearPinCode(false), LockScreenViewEvent.CodeCreationComplete)
     }
 
     @Test
@@ -139,19 +138,19 @@ class VectorLockScreenViewModelTests {
         val configuration = createDefaultConfiguration(mode = LockScreenMode.CREATE, needsNewCodeValidation = true)
         val initialState = createViewState(lockScreenConfiguration = configuration)
         val configProvider = LockScreenConfiguratorProvider(configuration)
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.onPinCodeEntered("1234")
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
 
-        events.assertValues(VectorLockScreenViewEvent.ClearPinCode(false))
+        events.assertValues(LockScreenViewEvent.ClearPinCode(false))
         val pinCodeState = viewModel.awaitState().pinCodeState
         pinCodeState shouldBeEqualTo PinCodeState.FirstCodeEntered
 
-        viewModel.onPinCodeEntered("4321")
-        events.assertValues(VectorLockScreenViewEvent.ClearPinCode(false), VectorLockScreenViewEvent.ClearPinCode(true))
+        viewModel.handle(LockScreenAction.PinCodeEntered("4321"))
+        events.assertValues(LockScreenViewEvent.ClearPinCode(false), LockScreenViewEvent.ClearPinCode(true))
         val newPinCodeState = viewModel.awaitState().pinCodeState
         newPinCodeState shouldBeEqualTo PinCodeState.Idle
     }
@@ -160,16 +159,16 @@ class VectorLockScreenViewModelTests {
     fun `onPinCodeEntered handles exceptions`() = runTest {
         val initialState = createViewState()
         val configProvider = LockScreenConfiguratorProvider(createDefaultConfiguration())
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
         val exception = IllegalStateException("Something went wrong")
         coEvery { pinCodeUtils.verifyPinCode(any()) } throws exception
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.onPinCodeEntered("1234")
+        viewModel.handle(LockScreenAction.PinCodeEntered("1234"))
 
-        events.assertValues(VectorLockScreenViewEvent.AuthError(AuthMethod.PIN_CODE, exception))
+        events.assertValues(LockScreenViewEvent.AuthError(AuthMethod.PIN_CODE, exception))
     }
 
     @Test
@@ -190,14 +189,14 @@ class VectorLockScreenViewModelTests {
                 isBiometricKeyInvalidated = false,
                 lockScreenConfiguration = configuration
         )
-        val viewModel = VectorLockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(initialState, pinCodeUtils, biometricUtils, configProvider)
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.showBiometricPrompt(mockk())
+        viewModel.handle(LockScreenAction.ShowBiometricPrompt(mockk()))
 
-        events.assertValues(VectorLockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, exception))
+        events.assertValues(LockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, exception))
         verify { biometricUtils.disableAuthentication() }
 
         // System key was deleted, biometric auth should be disabled
@@ -210,30 +209,30 @@ class VectorLockScreenViewModelTests {
     @Test
     fun `when showBiometricPrompt receives an event it propagates it as a ViewEvent`() = runTest {
         val configProvider = LockScreenConfiguratorProvider(createDefaultConfiguration())
-        val viewModel = VectorLockScreenViewModel(createViewState(), pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(createViewState(), pinCodeUtils, biometricUtils, configProvider)
         coEvery { biometricUtils.authenticate(any<FragmentActivity>()) } returns flowOf(false, true)
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.showBiometricPrompt(mockk())
+        viewModel.handle(LockScreenAction.ShowBiometricPrompt(mockk()))
 
-        events.assertValues(VectorLockScreenViewEvent.AuthFailure(AuthMethod.BIOMETRICS), VectorLockScreenViewEvent.AuthSuccessful(AuthMethod.BIOMETRICS))
+        events.assertValues(LockScreenViewEvent.AuthFailure(AuthMethod.BIOMETRICS), LockScreenViewEvent.AuthSuccessful(AuthMethod.BIOMETRICS))
     }
 
     @Test
     fun `showBiometricPrompt handles exceptions`() = runTest {
         val configProvider = LockScreenConfiguratorProvider(createDefaultConfiguration())
-        val viewModel = VectorLockScreenViewModel(createViewState(), pinCodeUtils, biometricUtils, configProvider)
+        val viewModel = LockScreenViewModel(createViewState(), pinCodeUtils, biometricUtils, configProvider)
         val exception = IllegalStateException("Something went wrong")
         coEvery { biometricUtils.authenticate(any<FragmentActivity>()) } throws exception
 
-        val events = viewModel.viewEvent.test(CoroutineScope(Dispatchers.Unconfined))
+        val events = viewModel.test().viewEvents
         events.assertNoValues()
 
-        viewModel.showBiometricPrompt(mockk())
+        viewModel.handle(LockScreenAction.ShowBiometricPrompt(mockk()))
 
-        events.assertValues(VectorLockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, exception))
+        events.assertValues(LockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, exception))
     }
 
     private fun createViewState(
@@ -242,7 +241,7 @@ class VectorLockScreenViewModelTests {
             showBiometricPromptAutomatically: Boolean = false,
             pinCodeState: PinCodeState = PinCodeState.Idle,
             isBiometricKeyInvalidated: Boolean = false,
-    ): VectorLockScreenViewState = VectorLockScreenViewState(
+    ): LockScreenViewState = LockScreenViewState(
             lockScreenConfiguration, canUseBiometricAuth, showBiometricPromptAutomatically, pinCodeState, isBiometricKeyInvalidated
     )
 

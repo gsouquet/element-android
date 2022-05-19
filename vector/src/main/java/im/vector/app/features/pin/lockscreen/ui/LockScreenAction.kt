@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.biometrics
+package im.vector.app.features.pin.lockscreen.ui
 
-import androidx.biometric.BiometricPrompt
+import androidx.fragment.app.FragmentActivity
+import im.vector.app.core.platform.VectorViewModelAction
 
-/**
- * Wrapper for [BiometricPrompt.AuthenticationCallback] errors.
- */
-class BiometricAuthError(val code: Int, message: String): Throwable(message) {
-    val isAuthDisabledError: Boolean get() = code in LOCKOUT_ERROR_CODES
-    val isAuthPermanentlyDisabledError: Boolean get() = code == BiometricPrompt.ERROR_LOCKOUT_PERMANENT
-
-    companion object {
-        val LOCKOUT_ERROR_CODES = arrayOf(BiometricPrompt.ERROR_LOCKOUT, BiometricPrompt.ERROR_LOCKOUT_PERMANENT)
-    }
+sealed class LockScreenAction: VectorViewModelAction {
+    data class PinCodeEntered(val value: String): LockScreenAction()
+    data class ShowBiometricPrompt(val callingActivity: FragmentActivity): LockScreenAction()
 }

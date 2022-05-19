@@ -34,7 +34,7 @@ import im.vector.app.R
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.crypto.KeyHelper
-import im.vector.app.features.pin.lockscreen.fragments.FallbackBiometricDialogFragment
+import im.vector.app.features.pin.lockscreen.ui.FallbackBiometricDialogFragment
 import im.vector.app.features.pin.lockscreen.utils.DevicePromptCheck
 import im.vector.app.features.pin.lockscreen.utils.hasFlag
 import kotlinx.coroutines.CoroutineScope
@@ -92,7 +92,7 @@ class BiometricUtils(
     /**
      * Returns true if any system authentication method and there is a valid associated key.
      */
-    val isSystemAuthEnabled: Boolean get() = canUseAnySystemAuth && hasSystemKey
+    val isSystemAuthEnabled: Boolean get() = canUseAnySystemAuth && (hasSystemKey || isUsingLegacyAuthentication)
 
     /**
      * Returns true is the [KeyStore] contains a key associated to system authentication.
@@ -103,6 +103,11 @@ class BiometricUtils(
      * Returns true if the system key is valid, that is, not invalidated by new enrollments.
      */
     val isSystemKeyValid: Boolean get() = keyHelper.isSystemKeyValid()
+
+    /**
+     * Returns true when it's using the legacy implementation of the PIN code library.
+     */
+    val isUsingLegacyAuthentication: Boolean get() = keyHelper.isUsingLegacyKey() && !keyHelper.hasSystemKey()
 
     /**
      * Enables system authentication after displaying a [BiometricPrompt] in the passed [FragmentActivity].

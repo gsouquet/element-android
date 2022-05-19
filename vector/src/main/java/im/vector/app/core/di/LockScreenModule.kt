@@ -31,7 +31,7 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfigurati
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.crypto.KeyHelper
-import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenViewModel
+import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
 import im.vector.app.features.pin.lockscreen.pincode.EncryptedPinCodeStorage
 import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
 import javax.inject.Singleton
@@ -77,8 +77,8 @@ interface LockScreenBindsModule {
 
     @Binds
     @IntoMap
-    @MavericksViewModelKey(VectorLockScreenViewModel::class)
-    fun bindLockScreenViewModel(factory: VectorLockScreenViewModel.Factory): MavericksAssistedViewModelFactory<*, *>
+    @MavericksViewModelKey(LockScreenViewModel::class)
+    fun bindLockScreenViewModel(factory: LockScreenViewModel.Factory): MavericksAssistedViewModelFactory<*, *>
 
     @Binds
     fun bindSharedPreferencesStorage(pinCodeStore: PinCodeStore): EncryptedPinCodeStorage

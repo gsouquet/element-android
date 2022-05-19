@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.fragments
+package im.vector.app.features.pin.lockscreen.ui
 
-sealed class VectorLockScreenViewEvent {
-    data class ClearPinCode(val confirmationFailed: Boolean): VectorLockScreenViewEvent()
-    object CodeCreationComplete: VectorLockScreenViewEvent()
-    data class AuthSuccessful(val method: AuthMethod): VectorLockScreenViewEvent()
-    data class AuthFailure(val method: AuthMethod): VectorLockScreenViewEvent()
-    data class AuthError(val method: AuthMethod, val throwable: Throwable): VectorLockScreenViewEvent()
+import com.airbnb.mvrx.MavericksState
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
+
+data class LockScreenViewState(
+        val lockScreenConfiguration: LockScreenConfiguration,
+        val canUseBiometricAuth: Boolean,
+        val showBiometricPromptAutomatically: Boolean,
+        val pinCodeState: PinCodeState,
+        val isBiometricKeyInvalidated: Boolean,
+): MavericksState
+
+sealed class PinCodeState {
+    object Idle: PinCodeState()
+    object FirstCodeEntered: PinCodeState()
 }

@@ -45,5 +45,23 @@ class PinCodeUtils(
         return keyHelper.deletePinCodeKey()
     }
 
+    suspend fun migrateFromLegacyKey() {
+        if (!keyHelper.isUsingLegacyKey()) return
+        val encryptedPinCode = storageEncrypted.getPinCode() ?: return
+
+        // Get legacy PIN code crypto helper
+        val pinCodeCrypto = keyHelper.getPinCodeKey()
+        // Decrypt PIN code
+        val savedPinCode = pinCodeCrypto.decryptToString(encryptedPinCode)
+        // Delete old key
+        keyHelper.deletePinCodeKey()
+        // Create new helper with the new key
+        val newPinCodeCrypto = keyHelper.getPinCodeKey()
+        // Encrypt PIN code with the new key
+        val newEncryptedPinCode = newPinCodeCrypto.encryptToString(savedPinCode)
+        // Save the new encrypted PIN code
+        storageEncrypted.savePinCode(newEncryptedPinCode)
+    }
+
 }
 

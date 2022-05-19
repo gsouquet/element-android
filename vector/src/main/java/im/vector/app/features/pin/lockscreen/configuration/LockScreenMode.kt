@@ -18,10 +18,10 @@ package im.vector.app.features.pin.lockscreen.configuration
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenViewModel
+import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
 
 /**
- * Mode used by [VectorLockScreenViewModel] to configure the UI and interactions.
+ * Mode used by [LockScreenViewModel] to configure the UI and interactions.
  */
 @Parcelize
 enum class LockScreenMode: Parcelable {

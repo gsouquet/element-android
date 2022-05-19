@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.fragments
+package im.vector.app.features.pin.lockscreen.ui
 
 import android.os.Build
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.fragment.app.FragmentActivity
-import com.airbnb.mvrx.MavericksViewModel
 import com.airbnb.mvrx.MavericksViewModelFactory
 import com.airbnb.mvrx.ViewModelContext
 import com.airbnb.mvrx.withState
@@ -32,33 +31,31 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfigurato
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.core.di.MavericksAssistedViewModelFactory
 import im.vector.app.core.di.hiltMavericksViewModelFactory
+import im.vector.app.core.platform.VectorViewModel
 import im.vector.app.features.pin.lockscreen.biometrics.BiometricAuthError
 import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class VectorLockScreenViewModel @AssistedInject constructor(
-        @Assisted val initialState: VectorLockScreenViewState,
+class LockScreenViewModel @AssistedInject constructor(
+        @Assisted val initialState: LockScreenViewState,
         private val pinCodeUtils: PinCodeUtils,
         private val biometricUtils: BiometricUtils,
         private val configuratorProvider: LockScreenConfiguratorProvider,
-): MavericksViewModel<VectorLockScreenViewState>(initialState) {
+): VectorViewModel<LockScreenViewState, LockScreenAction, LockScreenViewEvent>(initialState) {
 
     @AssistedFactory
-    interface Factory : MavericksAssistedViewModelFactory<VectorLockScreenViewModel, VectorLockScreenViewState> {
-        override fun create(initialState: VectorLockScreenViewState): VectorLockScreenViewModel
+    interface Factory : MavericksAssistedViewModelFactory<LockScreenViewModel, LockScreenViewState> {
+        override fun create(initialState: LockScreenViewState): LockScreenViewModel
     }
 
-    companion object : MavericksViewModelFactory<VectorLockScreenViewModel, VectorLockScreenViewState> by hiltMavericksViewModelFactory() {
+    companion object : MavericksViewModelFactory<LockScreenViewModel, LockScreenViewState> by hiltMavericksViewModelFactory() {
 
-        override fun initialState(viewModelContext: ViewModelContext): VectorLockScreenViewState {
-            return VectorLockScreenViewState(
+        override fun initialState(viewModelContext: ViewModelContext): LockScreenViewState {
+            return LockScreenViewState(
                     lockScreenConfiguration = DUMMY_CONFIGURATION,
                     canUseBiometricAuth = false,
                     showBiometricPromptAutomatically = false,
@@ -79,9 +76,6 @@ class VectorLockScreenViewModel @AssistedInject constructor(
 
     private var firstEnteredCode: String? = null
 
-    private val mutableViewEventsFlow = MutableSharedFlow<VectorLockScreenViewEvent>(replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val viewEvent: Flow<VectorLockScreenViewEvent> = mutableViewEventsFlow
-
     // BiometricPrompt will automatically disable system auth after too many failed auth attempts
     private var isSystemAuthTemporarilyDisabledByBiometricPrompt = false
 
@@ -91,56 +85,63 @@ class VectorLockScreenViewModel @AssistedInject constructor(
                 .launchIn(viewModelScope)
     }
 
-    fun onPinCodeEntered(code: String) = flow {
+    override fun handle(action: LockScreenAction) {
+        when (action) {
+            is LockScreenAction.PinCodeEntered      -> onPinCodeEntered(action.value)
+            is LockScreenAction.ShowBiometricPrompt -> showBiometricPrompt(action.callingActivity)
+        }
+    }
+
+    private fun onPinCodeEntered(code: String) = flow {
         val state = awaitState()
         when (state.lockScreenConfiguration.mode) {
             LockScreenMode.CREATE -> {
                 if (firstEnteredCode == null && state.lockScreenConfiguration.needsNewCodeValidation) {
                     firstEnteredCode = code
-                    mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.ClearPinCode(false))
+                    _viewEvents.post(LockScreenViewEvent.ClearPinCode(false))
                     emit(PinCodeState.FirstCodeEntered)
                 } else {
                     if (!state.lockScreenConfiguration.needsNewCodeValidation || code == firstEnteredCode) {
                         pinCodeUtils.createPinCode(code)
-                        mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.CodeCreationComplete)
+                        _viewEvents.post(LockScreenViewEvent.CodeCreationComplete)
                         emit(null)
                     } else {
                         firstEnteredCode = null
-                        mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.ClearPinCode(true))
+                        _viewEvents.post(LockScreenViewEvent.ClearPinCode(true))
                         emit(PinCodeState.Idle)
                     }
                 }
             }
             LockScreenMode.VERIFY -> {
                 if (pinCodeUtils.verifyPinCode(code)) {
-                    mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE))
+                    _viewEvents.post(LockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE))
                     emit(null)
                 } else {
-                    mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.AuthFailure(AuthMethod.PIN_CODE))
+                    _viewEvents.post(LockScreenViewEvent.AuthFailure(AuthMethod.PIN_CODE))
                     emit(null)
                 }
             }
         }
     }.catch { error ->
-        mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.AuthError(AuthMethod.PIN_CODE, error))
+        _viewEvents.post(LockScreenViewEvent.AuthError(AuthMethod.PIN_CODE, error))
     }.onEach { newPinState ->
         newPinState?.let { setState { copy(pinCodeState = it) }}
     }.launchIn(viewModelScope)
 
-    fun showBiometricPrompt(activity: FragmentActivity) = flow {
+    private fun showBiometricPrompt(activity: FragmentActivity) = flow {
         emitAll(biometricUtils.authenticate(activity))
     }.catch { error ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error is KeyPermanentlyInvalidatedException) {
-            disableBiometricAuthentication()
+            removeBiometricAuthentication()
         } else if (error is BiometricAuthError && error.isAuthDisabledError) {
             isSystemAuthTemporarilyDisabledByBiometricPrompt = true
             updateStateWithBiometricInfo()
         }
-        mutableViewEventsFlow.tryEmit(VectorLockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, error))
+        _viewEvents.post(LockScreenViewEvent.AuthError(AuthMethod.BIOMETRICS, error))
     }.onEach { success ->
-        mutableViewEventsFlow.tryEmit(
-                if (success) VectorLockScreenViewEvent.AuthSuccessful(AuthMethod.BIOMETRICS)
-                else VectorLockScreenViewEvent.AuthFailure(AuthMethod.BIOMETRICS)
+        _viewEvents.post(
+                if (success) LockScreenViewEvent.AuthSuccessful(AuthMethod.BIOMETRICS)
+                else LockScreenViewEvent.AuthFailure(AuthMethod.BIOMETRICS)
         )
     }.launchIn(viewModelScope)
 
@@ -148,7 +149,7 @@ class VectorLockScreenViewModel @AssistedInject constructor(
         configuratorProvider.reset()
     }
 
-    private fun disableBiometricAuthentication() {
+    private fun removeBiometricAuthentication() {
         biometricUtils.disableAuthentication()
         updateStateWithBiometricInfo()
     }

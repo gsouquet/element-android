@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.fragments
+package im.vector.app.features.pin.lockscreen.ui
 
 /**
  * Listener class to be notified of any event that could happen in the lock screen UI.

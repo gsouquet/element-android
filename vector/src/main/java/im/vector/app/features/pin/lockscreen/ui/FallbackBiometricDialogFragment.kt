@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.fragments
+package im.vector.app.features.pin.lockscreen.ui
 
 import android.content.DialogInterface
 import android.os.Bundle

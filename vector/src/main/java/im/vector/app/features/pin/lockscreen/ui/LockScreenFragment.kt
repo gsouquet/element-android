@@ -14,45 +14,46 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.fragments
+package im.vector.app.features.pin.lockscreen.ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.airbnb.mvrx.MavericksView
 import com.airbnb.mvrx.fragmentViewModel
 import com.airbnb.mvrx.withState
 import dagger.hilt.android.AndroidEntryPoint
 import im.vector.app.R
+import im.vector.app.core.platform.VectorBaseFragment
 import im.vector.app.databinding.FragmentLockScreenBinding
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.utils.vibrate
 import im.vector.app.features.pin.lockscreen.views.CodeView
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
-class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), MavericksView {
+class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
 
     var lockScreenListener: LockScreenListener? = null
     var onLeftButtonClickedListener: View.OnClickListener? = null
 
-    private val viewModel: VectorLockScreenViewModel by fragmentViewModel()
-    private var binding: FragmentLockScreenBinding? = null
+    private val viewModel: LockScreenViewModel by fragmentViewModel()
+
+    override fun getBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLockScreenBinding =
+            FragmentLockScreenBinding.inflate(layoutInflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding = FragmentLockScreenBinding.bind(view).also { setupBindings(it) }
+        setupBindings(views)
 
-        viewModel.viewEvent.onEach {
+        viewModel.observeViewEvents {
             handleEvent(it)
-        }.launchIn(viewLifecycleOwner.lifecycleScope)
+        }
 
         withState(viewModel) { state ->
             if (state.lockScreenConfiguration.mode == LockScreenMode.CREATE) return@withState
@@ -65,13 +66,11 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
                         showBiometricPrompt()
                     }
                 }
+            } else if (state.showBiometricPromptAutomatically) {
+                // Force system key creation
+                showBiometricPrompt()
             }
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        binding = null
     }
 
     override fun onDestroy() {
@@ -82,15 +81,14 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
     override fun invalidate() = withState(viewModel) { state ->
         when (state.pinCodeState) {
             is PinCodeState.FirstCodeEntered -> {
-                binding?.titleTextView?.let { setupTitleView(it, true, state.lockScreenConfiguration) }
+                setupTitleView(views.titleTextView, true, state.lockScreenConfiguration)
                 lockScreenListener?.onFirstCodeEntered()
             }
             is PinCodeState.Idle -> {
-                binding?.titleTextView?.let { setupTitleView(it, false, state.lockScreenConfiguration) }
+                setupTitleView(views.titleTextView, false, state.lockScreenConfiguration)
             }
         }
-        binding?.let { renderDeleteOrFingerprintButtons(it, it.codeView.enteredDigits) }
-        Unit
+        renderDeleteOrFingerprintButtons(views, views.codeView.enteredDigits)
     }
 
     private fun onAuthFailure(method: AuthMethod) {
@@ -104,7 +102,7 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
         if (configuration.animateOnError) {
             context?.let {
                 val animation = AnimationUtils.loadAnimation(it, R.anim.lockscreen_shake_animation)
-                binding?.codeView?.startAnimation(animation)
+                views.codeView.startAnimation(animation)
             }
         }
     }
@@ -113,23 +111,23 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
         lockScreenListener?.onAuthenticationError(authMethod, throwable)
         withState(viewModel) { state ->
             if (state.lockScreenConfiguration.clearCodeOnError) {
-                binding?.codeView?.clearCode()
+                views.codeView.clearCode()
             }
         }
     }
 
-    private fun handleEvent(viewEvent: VectorLockScreenViewEvent) {
+    private fun handleEvent(viewEvent: LockScreenViewEvent) {
         when (viewEvent) {
-            is VectorLockScreenViewEvent.CodeCreationComplete -> lockScreenListener?.onPinCodeCreated()
-            is VectorLockScreenViewEvent.ClearPinCode -> {
+            is LockScreenViewEvent.CodeCreationComplete -> lockScreenListener?.onPinCodeCreated()
+            is LockScreenViewEvent.ClearPinCode         -> {
                 if (viewEvent.confirmationFailed) {
                     lockScreenListener?.onNewCodeValidationFailed()
                 }
-                binding?.codeView?.clearCode()
+                views.codeView.clearCode()
             }
-            is VectorLockScreenViewEvent.AuthSuccessful -> lockScreenListener?.onAuthenticationSuccess(viewEvent.method)
-            is VectorLockScreenViewEvent.AuthFailure -> onAuthFailure(viewEvent.method)
-            is VectorLockScreenViewEvent.AuthError -> onAuthError(viewEvent.method, viewEvent.throwable)
+            is LockScreenViewEvent.AuthSuccessful       -> lockScreenListener?.onAuthenticationSuccess(viewEvent.method)
+            is LockScreenViewEvent.AuthFailure          -> onAuthFailure(viewEvent.method)
+            is LockScreenViewEvent.AuthError            -> onAuthError(viewEvent.method, viewEvent.throwable)
         }
     }
 
@@ -176,7 +174,7 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
     private fun setupCodeView(codeView: CodeView, configuration: LockScreenConfiguration) = with(codeView) {
         codeLength = configuration.pinCodeLength
         onCodeCompleted = { code ->
-            viewModel.onPinCodeEntered(code)
+            viewModel.handle(LockScreenAction.PinCodeEntered(code))
         }
     }
 
@@ -213,7 +211,7 @@ class VectorLockScreenFragment: Fragment(R.layout.fragment_lock_screen), Maveric
     }
 
     private fun showBiometricPrompt() {
-        viewModel.showBiometricPrompt(requireActivity())
+        viewModel.handle(LockScreenAction.ShowBiometricPrompt(requireActivity()))
     }
 }
 

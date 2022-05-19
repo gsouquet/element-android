@@ -84,6 +84,11 @@ class KeyHelper(
     fun isSystemKeyValid() = hasSystemKey() && getSystemKey().hasValidKey()
 
     /**
+     * Is using legacy key
+     */
+    fun isUsingLegacyKey() = pinCodeKeyAlias == LEGACY_PIN_CODE_KEY_ALIAS
+
+    /**
      * As we support Android APIs >= 21 we need to add a 'legacy' KeyStoreCrypto for devices in APIs < 23 where the new cryptographic APIs were added.
      */
     private fun getKeyStoreCrypto(alias: String, keyGenParameterSpecBuilder: KeyGenParameterSpec.Builder.() -> Unit = {}): KeyStoreCrypto =

@@ -35,10 +35,14 @@ import im.vector.app.features.MainActivityArgs
 import im.vector.app.features.pin.lockscreen.biometrics.BiometricAuthError
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
-import im.vector.app.features.pin.lockscreen.fragments.AuthMethod
-import im.vector.app.features.pin.lockscreen.fragments.LockScreenListener
-import im.vector.app.features.pin.lockscreen.fragments.VectorLockScreenFragment
+import im.vector.app.features.pin.lockscreen.crypto.KeyHelper
+import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
+import im.vector.app.features.pin.lockscreen.ui.AuthMethod
+import im.vector.app.features.pin.lockscreen.ui.LockScreenListener
+import im.vector.app.features.pin.lockscreen.ui.LockScreenFragment
 import im.vector.app.features.settings.VectorPreferences
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
@@ -51,6 +55,8 @@ class PinFragment @Inject constructor(
         private val pinCodeStore: PinCodeStore,
         private val vectorPreferences: VectorPreferences,
         private val configuratorProvider: LockScreenConfiguratorProvider,
+        private val keyHelper: KeyHelper,
+        private val pinCodeUtils: PinCodeUtils,
 ) : VectorBaseFragment<FragmentPinBinding>() {
 
     private val fragmentArgs: PinArgs by args()
@@ -69,7 +75,7 @@ class PinFragment @Inject constructor(
     }
 
     private fun showCreateFragment() {
-        val createFragment = VectorLockScreenFragment()
+        val createFragment = LockScreenFragment()
         createFragment.lockScreenListener = object: LockScreenListener() {
             override fun onNewCodeValidationFailed() {
                 Toast.makeText(requireContext(), getString(R.string.create_pin_confirm_failure), Toast.LENGTH_SHORT).show()
@@ -93,7 +99,7 @@ class PinFragment @Inject constructor(
     }
 
     private fun showAuthFragment() {
-        val authFragment = VectorLockScreenFragment()
+        val authFragment = LockScreenFragment()
         val canUseBiometrics = vectorPreferences.useBiometricsToUnlock()
         authFragment.onLeftButtonClickedListener = View.OnClickListener { displayForgotPinWarningDialog() }
         authFragment.lockScreenListener = object: LockScreenListener() {
@@ -105,6 +111,11 @@ class PinFragment @Inject constructor(
             }
 
             override fun onAuthenticationSuccess(authMethod: AuthMethod) {
+                // If a system key was created and a legacy pin code key is used, migrate this legacy key
+                if (authMethod == AuthMethod.BIOMETRICS && keyHelper.isUsingLegacyKey()) {
+                    // We need to run this even if the lifecycleScope is canceled
+                    MainScope().launch { pinCodeUtils.migrateFromLegacyKey() }
+                }
                 pinCodeStore.resetCounter()
                 vectorBaseActivity.setResult(Activity.RESULT_OK)
                 vectorBaseActivity.finish()
@@ -116,6 +127,9 @@ class PinFragment @Inject constructor(
                     // System disabled biometric auth, no need to do it ourselves too
                     if (throwable.isAuthDisabledError) {
                         pinCodeStore.resetCounter()
+                    }
+                    if (throwable.isAuthPermanentlyDisabledError) {
+                        vectorPreferences.setUseBiometricToUnlock(false)
                     }
                     Toast.makeText(requireContext(), throwable.localizedMessage, Toast.LENGTH_SHORT).show()
                 }
