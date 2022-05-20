@@ -58,17 +58,12 @@ class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
         withState(viewModel) { state ->
             if (state.lockScreenConfiguration.mode == LockScreenMode.CREATE) return@withState
 
-            if (state.showBiometricPromptAutomatically && !state.isBiometricKeyInvalidated) {
-                viewLifecycleOwner.lifecycleScope.launchWhenResumed {
-                    if (state.canUseBiometricAuth && state.isBiometricKeyInvalidated) {
-                        lockScreenListener?.onBiometricKeyInvalidated()
-                    } else {
-                        showBiometricPrompt()
-                    }
+            viewLifecycleOwner.lifecycleScope.launchWhenResumed {
+                if (state.canUseBiometricAuth && state.isBiometricKeyInvalidated) {
+                    lockScreenListener?.onBiometricKeyInvalidated()
+                } else if (state.showBiometricPromptAutomatically) {
+                    showBiometricPrompt()
                 }
-            } else if (state.showBiometricPromptAutomatically) {
-                // Force system key creation
-                showBiometricPrompt()
             }
         }
     }
@@ -201,7 +196,7 @@ class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
     }
 
     private fun renderDeleteOrFingerprintButtons(binding: FragmentLockScreenBinding, digits: Int) = withState(viewModel) { state ->
-        val showFingerprintButton = state.showBiometricPromptAutomatically && digits == 0
+        val showFingerprintButton = state.canUseBiometricAuth && !state.isBiometricKeyInvalidated && digits == 0
         binding.buttonFingerPrint.isVisible = showFingerprintButton
         binding.buttonDelete.isVisible = !showFingerprintButton && digits > 0
     }

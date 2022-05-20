@@ -23,6 +23,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import com.airbnb.mvrx.args
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import im.vector.app.R
@@ -123,7 +124,6 @@ class PinFragment @Inject constructor(
             }
 
             override fun onAuthenticationError(authMethod: AuthMethod, throwable: Throwable) {
-                super.onAuthenticationError(authMethod, throwable)
                 if (throwable is BiometricAuthError) {
                     // System disabled biometric auth, no need to do it ourselves
                     if (throwable.isAuthPermanentlyDisabledError) {
@@ -133,6 +133,17 @@ class PinFragment @Inject constructor(
                 } else {
                     Timber.e(throwable)
                 }
+            }
+
+            override fun onBiometricKeyInvalidated() {
+                // Disable biometric auth in settings and remove system key
+                vectorPreferences.setUseBiometricToUnlock(false)
+                lockScreenKeyRepository.deleteSystemKey()
+
+                AlertDialog.Builder(requireContext())
+                        .setMessage(R.string.auth_biometric_key_invalidated_message)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
             }
         }
         configuratorProvider.updateDefaultConfiguration {

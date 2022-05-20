@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.pin.lockscreen.ui
+package im.vector.app.features.pin.lockscreen.ui.fallbackprompt
 
 import android.content.DialogInterface
 import android.os.Bundle

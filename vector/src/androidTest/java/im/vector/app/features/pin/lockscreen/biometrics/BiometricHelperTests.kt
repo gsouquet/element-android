@@ -29,7 +29,7 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfigurati
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
-import im.vector.app.features.pin.lockscreen.ui.FallbackBiometricDialogFragment
+import im.vector.app.features.pin.lockscreen.ui.fallbackprompt.FallbackBiometricDialogFragment
 import im.vector.app.features.pin.lockscreen.tests.TestActivity
 import im.vector.app.features.pin.lockscreen.utils.DevicePromptCheck
 import io.mockk.clearAllMocks

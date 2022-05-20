@@ -34,7 +34,7 @@ import im.vector.app.R
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
-import im.vector.app.features.pin.lockscreen.ui.FallbackBiometricDialogFragment
+import im.vector.app.features.pin.lockscreen.ui.fallbackprompt.FallbackBiometricDialogFragment
 import im.vector.app.features.pin.lockscreen.utils.DevicePromptCheck
 import im.vector.app.features.pin.lockscreen.utils.hasFlag
 import kotlinx.coroutines.CoroutineScope
@@ -209,7 +209,7 @@ class BiometricHelper(
                 .setAllowedAuthenticators(authenticators)
                 .build()
         return BiometricPrompt(activity, executor, callback).also {
-            showFallbackFragmentIfNeeded(activity, channel, executor.asCoroutineDispatcher()) {
+            showFallbackFragmentIfNeeded(activity, channel.receiveAsFlow(), executor.asCoroutineDispatcher()) {
                 // For some reason this seems to be needed unless we want to receive a fragment transaction exception
                 delay(1L)
                 if (cryptoObject != null) {
@@ -279,14 +279,14 @@ class BiometricHelper(
     /**
      * This method displays a fallback biometric prompt dialog for devices with issues with their system implementations.
      * @param activity [FragmentActivity] to display this fallback fragment in.
-     * @param channel [Channel] where the authentication events will be received.
+     * @param authenticationFLow [Flow] where the authentication events will be received.
      * @param coroutineContext [CoroutineContext] to run async code. It's shared with the [BiometricPrompt] executor value.
      * @param showPrompt Lambda containing the code to show the original [BiometricPrompt] above the fallback dialog.
      * @see [DevicePromptCheck].
      */
     private fun showFallbackFragmentIfNeeded(
             activity: FragmentActivity,
-            channel: Channel<Boolean>,
+            authenticationFLow: Flow<Boolean>,
             coroutineContext: CoroutineContext,
             showPrompt: suspend () -> Unit
     ) {
@@ -299,7 +299,7 @@ class BiometricHelper(
                             cancelActionText = configuration.biometricCancelButtonTitle,
                     )
             fallbackFragment.onDismiss = { cancelPrompt() }
-            fallbackFragment.authenticationFlow = channel.receiveAsFlow()
+            fallbackFragment.authenticationFlow = authenticationFLow
 
             activity.supportFragmentManager.beginTransaction()
                     .runOnCommit { scope.launch { showPrompt() } }

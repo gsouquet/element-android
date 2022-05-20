@@ -162,7 +162,6 @@ class LockScreenViewModel @AssistedInject constructor(
         val isBiometricKeyInvalidated = biometricHelper.hasSystemKey && !biometricHelper.isSystemKeyValid
         val showBiometricPromptAutomatically = canUseBiometricAuth
                 && configuration.autoStartBiometric
-                && !isBiometricKeyInvalidated
         setState {
             copy(
                     canUseBiometricAuth = canUseBiometricAuth,

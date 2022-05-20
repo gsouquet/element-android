@@ -84,7 +84,7 @@ class LockScreenKeyRepository(
     fun isSystemKeyValid() = hasSystemKey() && getSystemKey().hasValidKey()
 
     /**
-     * Is using legacy key
+     * Is using legacy key for PIN code.
      */
     fun isUsingLegacyKey() = pinCodeKeyAlias == LEGACY_PIN_CODE_KEY_ALIAS
 

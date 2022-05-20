@@ -35,7 +35,6 @@ interface KeyStoreCrypto {
 
     /**
      * Loads or creates and saves the keys needed inside the Android [KeyStore].
-     * @throws KeyPermanentlyInvalidatedException if the key has been invalidated.
      */
     fun initialize()
 
@@ -95,7 +94,8 @@ interface KeyStoreCrypto {
         val hasKey = keyStore.containsAlias(alias)
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
-                initialize()
+                // This might throw a KeyPermanentlyInvalidatedException if the key has been invalidated
+                getInitializedCipher()
                 hasKey
             } catch (e: KeyPermanentlyInvalidatedException) {
                 false

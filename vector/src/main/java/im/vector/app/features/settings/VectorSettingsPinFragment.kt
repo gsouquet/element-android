@@ -23,6 +23,7 @@ import androidx.preference.SwitchPreference
 import im.vector.app.R
 import im.vector.app.core.extensions.registerStartForActivityResult
 import im.vector.app.core.preference.VectorPreference
+import im.vector.app.core.utils.toast
 import im.vector.app.features.navigation.Navigator
 import im.vector.app.features.notifications.NotificationDrawerManager
 import im.vector.app.features.pin.PinCodeStore
@@ -93,10 +94,15 @@ class VectorSettingsPinFragment @Inject constructor(
         useBiometricPref.setOnPreferenceChangeListener { _, newValue ->
             if (newValue as? Boolean == true) {
                 viewLifecycleOwner.lifecycleScope.launch {
-                    runCatching { biometricHelper.enableAuthentication(requireActivity()).collect() }
-                            .onFailure {
-                                showEnableBiometricErrorMessage()
-                            }
+                    runCatching {
+                        // If previous system key existed, delete it
+                        if (biometricHelper.hasSystemKey) {
+                            biometricHelper.disableAuthentication()
+                        }
+                        biometricHelper.enableAuthentication(requireActivity()).collect()
+                    }.onFailure {
+                        showEnableBiometricErrorMessage()
+                    }
                     useBiometricPref.isChecked = shouldCheckBiometricPref(usePinCodePref.isChecked)
                 }
                 false
@@ -146,8 +152,7 @@ class VectorSettingsPinFragment @Inject constructor(
     }
 
     private fun showEnableBiometricErrorMessage() {
-        val context = context ?: return
-        Toast.makeText(context, "Could not enable biometric authentication.", Toast.LENGTH_SHORT).show()
+        context?.toast(R.string.settings_security_pin_code_use_biometrics_error)
     }
 
     private val pinActivityResultLauncher = registerStartForActivityResult {
