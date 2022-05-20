@@ -22,10 +22,17 @@ import androidx.biometric.BiometricPrompt
  * Wrapper for [BiometricPrompt.AuthenticationCallback] errors.
  */
 class BiometricAuthError(val code: Int, message: String): Throwable(message) {
+    /**
+     * This error disables Biometric authentication, either temporarily or permanently.
+     */
     val isAuthDisabledError: Boolean get() = code in LOCKOUT_ERROR_CODES
+
+    /**
+     * This error permanently disables Biometric authentication.
+     */
     val isAuthPermanentlyDisabledError: Boolean get() = code == BiometricPrompt.ERROR_LOCKOUT_PERMANENT
 
     companion object {
-        val LOCKOUT_ERROR_CODES = arrayOf(BiometricPrompt.ERROR_LOCKOUT, BiometricPrompt.ERROR_LOCKOUT_PERMANENT)
+       private val LOCKOUT_ERROR_CODES = arrayOf(BiometricPrompt.ERROR_LOCKOUT, BiometricPrompt.ERROR_LOCKOUT_PERMANENT)
     }
 }

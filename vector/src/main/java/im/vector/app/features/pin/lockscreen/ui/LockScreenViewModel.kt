@@ -25,7 +25,7 @@ import com.airbnb.mvrx.withState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import im.vector.app.features.pin.lockscreen.biometrics.BiometricUtils
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricHelper
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
@@ -33,7 +33,7 @@ import im.vector.app.core.di.MavericksAssistedViewModelFactory
 import im.vector.app.core.di.hiltMavericksViewModelFactory
 import im.vector.app.core.platform.VectorViewModel
 import im.vector.app.features.pin.lockscreen.biometrics.BiometricAuthError
-import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
+import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -42,8 +42,8 @@ import kotlinx.coroutines.flow.onEach
 
 class LockScreenViewModel @AssistedInject constructor(
         @Assisted val initialState: LockScreenViewState,
-        private val pinCodeUtils: PinCodeUtils,
-        private val biometricUtils: BiometricUtils,
+        private val pinCodeHelper: PinCodeHelper,
+        private val biometricHelper: BiometricHelper,
         private val configuratorProvider: LockScreenConfiguratorProvider,
 ): VectorViewModel<LockScreenViewState, LockScreenAction, LockScreenViewEvent>(initialState) {
 
@@ -102,7 +102,7 @@ class LockScreenViewModel @AssistedInject constructor(
                     emit(PinCodeState.FirstCodeEntered)
                 } else {
                     if (!state.lockScreenConfiguration.needsNewCodeValidation || code == firstEnteredCode) {
-                        pinCodeUtils.createPinCode(code)
+                        pinCodeHelper.createPinCode(code)
                         _viewEvents.post(LockScreenViewEvent.CodeCreationComplete)
                         emit(null)
                     } else {
@@ -113,7 +113,7 @@ class LockScreenViewModel @AssistedInject constructor(
                 }
             }
             LockScreenMode.VERIFY -> {
-                if (pinCodeUtils.verifyPinCode(code)) {
+                if (pinCodeHelper.verifyPinCode(code)) {
                     _viewEvents.post(LockScreenViewEvent.AuthSuccessful(AuthMethod.PIN_CODE))
                     emit(null)
                 } else {
@@ -129,7 +129,7 @@ class LockScreenViewModel @AssistedInject constructor(
     }.launchIn(viewModelScope)
 
     private fun showBiometricPrompt(activity: FragmentActivity) = flow {
-        emitAll(biometricUtils.authenticate(activity))
+        emitAll(biometricHelper.authenticate(activity))
     }.catch { error ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && error is KeyPermanentlyInvalidatedException) {
             removeBiometricAuthentication()
@@ -150,7 +150,7 @@ class LockScreenViewModel @AssistedInject constructor(
     }
 
     private fun removeBiometricAuthentication() {
-        biometricUtils.disableAuthentication()
+        biometricHelper.disableAuthentication()
         updateStateWithBiometricInfo()
     }
 
@@ -158,8 +158,8 @@ class LockScreenViewModel @AssistedInject constructor(
         val configuration = withState(this) { it.lockScreenConfiguration }
         val canUseBiometricAuth = configuration.mode == LockScreenMode.VERIFY
                 && !isSystemAuthTemporarilyDisabledByBiometricPrompt
-                && biometricUtils.isSystemAuthEnabled
-        val isBiometricKeyInvalidated = biometricUtils.hasSystemKey && !biometricUtils.isSystemKeyValid
+                && biometricHelper.isSystemAuthEnabled
+        val isBiometricKeyInvalidated = biometricHelper.hasSystemKey && !biometricHelper.isSystemKeyValid
         val showBiometricPromptAutomatically = canUseBiometricAuth
                 && configuration.autoStartBiometric
                 && !isBiometricKeyInvalidated

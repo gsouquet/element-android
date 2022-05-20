@@ -27,7 +27,7 @@ import im.vector.app.features.navigation.Navigator
 import im.vector.app.features.notifications.NotificationDrawerManager
 import im.vector.app.features.pin.PinCodeStore
 import im.vector.app.features.pin.PinMode
-import im.vector.app.features.pin.lockscreen.biometrics.BiometricUtils
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricHelper
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.extensions.orFalse
@@ -38,7 +38,7 @@ class VectorSettingsPinFragment @Inject constructor(
         private val pinCodeStore: PinCodeStore,
         private val navigator: Navigator,
         private val notificationDrawerManager: NotificationDrawerManager,
-        private val biometricUtils: BiometricUtils,
+        private val biometricHelper: BiometricHelper,
 ) : VectorSettingsBaseFragment() {
 
     override var titleRes = R.string.settings_security_application_protection_screen_title
@@ -62,8 +62,8 @@ class VectorSettingsPinFragment @Inject constructor(
 
     private fun shouldCheckBiometricPref(isPinCodeChecked: Boolean): Boolean {
         return isPinCodeChecked // Biometric auth depends on PIN auth
-                && biometricUtils.isSystemAuthEnabled
-                && biometricUtils.isSystemKeyValid
+                && biometricHelper.isSystemAuthEnabled
+                && biometricHelper.isSystemKeyValid
     }
 
     override fun onResume() {
@@ -93,7 +93,7 @@ class VectorSettingsPinFragment @Inject constructor(
         useBiometricPref.setOnPreferenceChangeListener { _, newValue ->
             if (newValue as? Boolean == true) {
                 viewLifecycleOwner.lifecycleScope.launch {
-                    runCatching { biometricUtils.enableAuthentication(requireActivity()).collect() }
+                    runCatching { biometricHelper.enableAuthentication(requireActivity()).collect() }
                             .onFailure {
                                 showEnableBiometricErrorMessage()
                             }
@@ -108,7 +108,7 @@ class VectorSettingsPinFragment @Inject constructor(
     }
 
     private fun disableBiometricAuthentication() {
-        runCatching { biometricUtils.disableAuthentication() }
+        runCatching { biometricHelper.disableAuthentication() }
                 .onFailure { Timber.e(it) }
     }
 

@@ -26,14 +26,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import im.vector.app.features.pin.PinCodeStore
-import im.vector.app.features.pin.lockscreen.biometrics.BiometricUtils
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricHelper
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
-import im.vector.app.features.pin.lockscreen.crypto.KeyHelper
+import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
 import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
 import im.vector.app.features.pin.lockscreen.pincode.EncryptedPinCodeStorage
-import im.vector.app.features.pin.lockscreen.pincode.PinCodeUtils
+import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
 import javax.inject.Singleton
 
 @Module
@@ -52,22 +52,22 @@ object LockScreenModule {
 
     @Provides
     @Singleton
-    fun provideKeyHelper(@ApplicationContext context: Context) = KeyHelper(context, "vector-lockscreen")
+    fun provideKeyHelper(@ApplicationContext context: Context) = LockScreenKeyRepository(context, "vector-lockscreen")
 
     @Provides
     @Singleton
     fun provideBiometricUtils(
             @ApplicationContext context: Context,
-            keyHelper: KeyHelper,
+            lockScreenKeyRepository: LockScreenKeyRepository,
             configurationProvider: LockScreenConfiguratorProvider,
-    ) = BiometricUtils(context, keyHelper, configurationProvider, BiometricManager.from(context))
+    ) = BiometricHelper(context, lockScreenKeyRepository, configurationProvider, BiometricManager.from(context))
 
     @Provides
     @Singleton
     fun providePinCodeUtils(
-            keyHelper: KeyHelper,
+            lockScreenKeyRepository: LockScreenKeyRepository,
             encryptedPinCodeStorage: EncryptedPinCodeStorage,
-    ) = PinCodeUtils(keyHelper, encryptedPinCodeStorage)
+    ) = PinCodeHelper(lockScreenKeyRepository, encryptedPinCodeStorage)
 
 }
 

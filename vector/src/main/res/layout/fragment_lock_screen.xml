@@ -40,7 +40,7 @@
             android:visibility="gone"
             android:theme="@style/LockScreenTitleTextStyle" />
 
-        <im.vector.app.features.pin.lockscreen.views.CodeView
+        <im.vector.app.features.pin.lockscreen.views.LockScreenCodeView
             android:id="@+id/code_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -278,7 +278,7 @@
                     android:layout_gravity="center"
                     android:background="@drawable/lockscreen_side_button_background"
                     android:gravity="center"
-                    android:text="fp"
+                    tools:text="delete"
                     android:theme="@style/LockScreenDeleteButtonStyle"
                     android:visibility="gone" />
 
@@ -296,23 +296,6 @@
             </FrameLayout>
 
         </LinearLayout>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:gravity="center">
-
-        <Button
-            android:id="@+id/button_next"
-            style="?attr/lockscreen_next_theme"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/lockscreen_next"
-            android:theme="@style/LockScreenNextTextStyle"
-            android:visibility="visible" />
 
     </LinearLayout>
 </RelativeLayout>

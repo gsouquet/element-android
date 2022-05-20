@@ -25,7 +25,7 @@ import android.os.VibratorManager
 import androidx.core.content.getSystemService
 
 /**
- * Performs a vibration pattern.
+ * Performs a vibration of [duration] ms.
  */
 @Suppress("DEPRECATION")
 internal fun Context.vibrate(duration: Long) {

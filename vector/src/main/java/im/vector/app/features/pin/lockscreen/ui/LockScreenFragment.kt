@@ -33,7 +33,7 @@ import im.vector.app.databinding.FragmentLockScreenBinding
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.utils.vibrate
-import im.vector.app.features.pin.lockscreen.views.CodeView
+import im.vector.app.features.pin.lockscreen.views.LockScreenCodeView
 
 @AndroidEntryPoint
 class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
@@ -140,10 +140,6 @@ class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
             subtitleTextView.text = it
             subtitleTextView.isVisible = true
         }
-        configuration.nextButtonTitle?.let {
-            buttonNext.text = it
-        }
-        buttonNext.visibility = View.INVISIBLE
 
         setupTitleView(titleTextView, false, configuration)
         setupCodeView(codeView, configuration)
@@ -171,7 +167,7 @@ class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
         }
     }
 
-    private fun setupCodeView(codeView: CodeView, configuration: LockScreenConfiguration) = with(codeView) {
+    private fun setupCodeView(lockScreenCodeView: LockScreenCodeView, configuration: LockScreenConfiguration) = with(lockScreenCodeView) {
         codeLength = configuration.pinCodeLength
         onCodeCompleted = { code ->
             viewModel.handle(LockScreenAction.PinCodeEntered(code))

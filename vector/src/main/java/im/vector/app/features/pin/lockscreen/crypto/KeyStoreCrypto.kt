@@ -19,6 +19,7 @@ package im.vector.app.features.pin.lockscreen.crypto
 import android.os.Build
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.util.Base64
+import androidx.biometric.BiometricPrompt
 import java.security.KeyStore
 import javax.crypto.Cipher
 
@@ -39,7 +40,7 @@ interface KeyStoreCrypto {
     fun initialize()
 
     /**
-     * Gets an initialized [Cipher] that can be wrapped using a [CryptoObject] to be provided to [BiometricPrompt].
+     * Gets an initialized [Cipher] that can be wrapped using a [BiometricPrompt.CryptoObject] to be provided to [BiometricPrompt].
      */
     fun getInitializedCipher(): Cipher
 

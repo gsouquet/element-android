@@ -42,8 +42,6 @@ data class LockScreenConfiguration(
         val title: String? = null,
         /** Subtitle of the pin code screen. Optional. */
         val subtitle: String? = null,
-        /** Text of the 'next' button. Optional. */
-        val nextButtonTitle: String? = null,
         /** Title of the 'confirm pin code' screen. Optional. */
         val newCodeConfirmationTitle: String? = null,
         /** Clear the inputted pin code on error. Defaults to true. */
@@ -52,8 +50,6 @@ data class LockScreenConfiguration(
         val vibrateOnError: Boolean = true,
         /** Animated the pin code view on authentication failed. Defaults to true. */
         val animateOnError: Boolean = true,
-        /** Proceed to the 'confirm pin code' screen automatically when the first pin code is entered. Defaults to true. */
-        val proceedToConfirmationAutomatically: Boolean = true,
         /** Title for the Biometric prompt dialog. Optional. */
         val biometricTitle: String? = null,
         /** Subtitle for the Biometric prompt dialog. Optional. */

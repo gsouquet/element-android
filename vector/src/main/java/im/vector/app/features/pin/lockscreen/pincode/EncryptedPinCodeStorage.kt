@@ -27,7 +27,7 @@ interface EncryptedPinCodeStorage {
     suspend fun getPinCode(): String?
 
     /**
-     * Saved the encrypted PIN code to some persistable storage.
+     * Saves the encrypted PIN code to some persistable storage.
      */
     suspend fun savePinCode(pinCode: String)
 

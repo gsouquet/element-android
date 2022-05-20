@@ -305,7 +305,7 @@
                 android:visibility="gone"
                 android:theme="@style/LockScreenTitleTextStyle" />
 
-            <im.vector.app.features.pin.lockscreen.views.CodeView
+            <im.vector.app.features.pin.lockscreen.views.LockScreenCodeView
                 android:id="@+id/code_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
