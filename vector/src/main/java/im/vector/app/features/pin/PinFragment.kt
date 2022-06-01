@@ -39,8 +39,8 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
 import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
 import im.vector.app.features.pin.lockscreen.ui.AuthMethod
-import im.vector.app.features.pin.lockscreen.ui.LockScreenListener
 import im.vector.app.features.pin.lockscreen.ui.LockScreenFragment
+import im.vector.app.features.pin.lockscreen.ui.LockScreenListener
 import im.vector.app.features.settings.VectorPreferences
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -78,7 +78,7 @@ class PinFragment @Inject constructor(
 
     private fun showCreateFragment() {
         val createFragment = LockScreenFragment()
-        createFragment.lockScreenListener = object: LockScreenListener() {
+        createFragment.lockScreenListener = object : LockScreenListener() {
             override fun onNewCodeValidationFailed() {
                 Toast.makeText(requireContext(), getString(R.string.create_pin_confirm_failure), Toast.LENGTH_SHORT).show()
             }
@@ -104,7 +104,7 @@ class PinFragment @Inject constructor(
         val authFragment = LockScreenFragment()
         val canUseBiometrics = vectorPreferences.useBiometricsToUnlock()
         authFragment.onLeftButtonClickedListener = View.OnClickListener { displayForgotPinWarningDialog() }
-        authFragment.lockScreenListener = object: LockScreenListener() {
+        authFragment.lockScreenListener = object : LockScreenListener() {
             override fun onAuthenticationFailure(authMethod: AuthMethod) {
                 when (authMethod) {
                     AuthMethod.PIN_CODE -> onWrongPin()

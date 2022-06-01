@@ -40,7 +40,7 @@ class LockScreenConfiguratorProvider @Inject constructor(
     /**
      * The current configuration to be read and used.
      */
-    val currentConfiguration get()= mutableConfigurationFlow.value
+    val currentConfiguration get() = mutableConfigurationFlow.value
 
     /**
      * Applies the changes in [block] to the [defaultConfiguration] to generate a new [currentConfiguration].
@@ -55,5 +55,4 @@ class LockScreenConfiguratorProvider @Inject constructor(
     fun reset() {
         mutableConfigurationFlow.value = defaultConfiguration
     }
-
 }

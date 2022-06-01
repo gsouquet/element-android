@@ -32,5 +32,4 @@ object KeyStoreCryptoCompat {
             KeyStoreCryptoImpl(alias, keyGenParameterSpecBuilder)
         }
     }
-
 }

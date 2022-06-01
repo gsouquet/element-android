@@ -39,7 +39,7 @@ import javax.crypto.spec.PSource
 class KeyStoreCryptoImpl(
         override val alias: String,
         private val keyGenParameterSpecBuilder: (KeyGenParameterSpec.Builder.() -> Unit) = {},
-): KeyStoreCrypto {
+) : KeyStoreCrypto {
 
     private val cipherAlgorithm: String = KeyProperties.KEY_ALGORITHM_RSA
     private val cipherBlockMode: String = KeyProperties.BLOCK_MODE_ECB

@@ -37,10 +37,10 @@ object DevicePromptCheck {
     )
 
     private val lgModelsWithoutBiometricUI = setOf(
-            "G810", //G8 ThinQ "G820", G8S ThinQ
-            "G850", //G8X ThinQ
-            "G900", //Velvet/Velvet 5G
-            "G910", //Velvet 4G Dual Sim
+            "G810", // G8 ThinQ "G820", G8S ThinQ
+            "G850", // G8X ThinQ
+            "G900", // Velvet/Velvet 5G
+            "G910", // Velvet 4G Dual Sim
     )
 
     /**

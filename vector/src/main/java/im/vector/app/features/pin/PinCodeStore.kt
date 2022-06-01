@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface PinCodeStore: EncryptedPinCodeStorage {
+interface PinCodeStore : EncryptedPinCodeStorage {
 
     /**
      * Returns the remaining PIN code attempts. When this reaches 0 the PIN code access won't be available for some time.
@@ -88,7 +88,6 @@ class SharedPrefPinCodeStore @Inject constructor(private val sharedPreferences: 
     override suspend fun hasEncodedPin(): Boolean {
         return withContext(Dispatchers.IO) { sharedPreferences.contains(ENCODED_PIN_CODE_KEY) }
     }
-
 
     override fun getRemainingPinCodeAttemptsNumber(): Int {
         return sharedPreferences.getInt(REMAINING_PIN_CODE_ATTEMPTS_KEY, MAX_PIN_CODE_ATTEMPTS_NUMBER_BEFORE_LOGOUT)

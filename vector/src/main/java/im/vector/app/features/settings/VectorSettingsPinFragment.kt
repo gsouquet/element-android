@@ -16,7 +16,6 @@
 
 package im.vector.app.features.settings
 
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
@@ -62,9 +61,9 @@ class VectorSettingsPinFragment @Inject constructor(
     }
 
     private fun shouldCheckBiometricPref(isPinCodeChecked: Boolean): Boolean {
-        return isPinCodeChecked // Biometric auth depends on PIN auth
-                && biometricHelper.isSystemAuthEnabled
-                && biometricHelper.isSystemKeyValid
+        return isPinCodeChecked && // Biometric auth depends on PIN auth
+                biometricHelper.isSystemAuthEnabled &&
+                biometricHelper.isSystemKeyValid
     }
 
     override fun onResume() {

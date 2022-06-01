@@ -25,14 +25,14 @@ import im.vector.app.features.pin.lockscreen.biometrics.BiometricHelper
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
+import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
+import im.vector.app.features.pin.lockscreen.test.AndroidVersionTestOverrider
 import im.vector.app.features.pin.lockscreen.ui.AuthMethod
 import im.vector.app.features.pin.lockscreen.ui.LockScreenAction
-import im.vector.app.features.pin.lockscreen.ui.PinCodeState
 import im.vector.app.features.pin.lockscreen.ui.LockScreenViewEvent
 import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
 import im.vector.app.features.pin.lockscreen.ui.LockScreenViewState
-import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
-import im.vector.app.features.pin.lockscreen.test.AndroidVersionTestOverrider
+import im.vector.app.features.pin.lockscreen.ui.PinCodeState
 import im.vector.app.test.test
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -261,5 +261,4 @@ class LockScreenViewModelTests {
             isDeviceCredentialUnlockEnabled,
             needsNewCodeValidation
     ).let(otherChanges)
-
 }

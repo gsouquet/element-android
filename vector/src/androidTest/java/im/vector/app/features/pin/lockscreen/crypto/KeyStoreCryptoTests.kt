@@ -44,5 +44,4 @@ class KeyStoreCryptoTests {
 
         keyStoreCrypto.hasValidKey().shouldBeFalse()
     }
-
 }

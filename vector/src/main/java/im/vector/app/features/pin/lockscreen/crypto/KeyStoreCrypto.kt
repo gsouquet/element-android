@@ -101,7 +101,6 @@ interface KeyStoreCrypto {
                 false
             }
         } else hasKey
-
     }
 
     companion object {
@@ -123,5 +122,4 @@ interface KeyStoreCrypto {
 
         private val keyStore by lazy { KeyStore.getInstance(ANDROID_KEY_STORE).also { it.load(null) } }
     }
-
 }

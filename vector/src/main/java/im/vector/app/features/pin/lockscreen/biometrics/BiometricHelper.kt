@@ -252,7 +252,7 @@ class BiometricHelper(
     private fun createSuspendingAuthCallback(
             channel: Channel<Boolean>,
             coroutineContext: CoroutineContext,
-    ): BiometricPrompt.AuthenticationCallback = object: BiometricPrompt.AuthenticationCallback() {
+    ): BiometricPrompt.AuthenticationCallback = object : BiometricPrompt.AuthenticationCallback() {
         private val scope = CoroutineScope(coroutineContext)
         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
             scope.launch {

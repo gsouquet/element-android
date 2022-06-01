@@ -77,6 +77,4 @@ class PinCodeHelper(
         // Save the new encrypted PIN code
         encryptedStorage.savePinCode(newEncryptedPinCode)
     }
-
 }
-

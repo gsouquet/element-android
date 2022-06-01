@@ -36,7 +36,7 @@ class LockScreenCodeView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
         defStyleRes: Int = 0,
-): LinearLayout(context, attrs, defStyleAttr, defStyleRes) {
+) : LinearLayout(context, attrs, defStyleAttr, defStyleRes) {
 
     private val code: MutableList<Char> = mutableListOf()
 
@@ -130,16 +130,16 @@ class LockScreenCodeView @JvmOverloads constructor(
         setupCodeViews()
     }
 
-    internal class SavedState: BaseSavedState {
+    internal class SavedState : BaseSavedState {
         var code: MutableList<Char> = mutableListOf()
         var codeLength: Int = 0
 
-        constructor(source: Parcel): super(source) {
+        constructor(source: Parcel) : super(source) {
             source.readList(code, null)
             codeLength = source.readInt()
         }
 
-        constructor(superState: Parcelable): super(superState)
+        constructor(superState: Parcelable) : super(superState)
 
         override fun writeToParcel(out: Parcel, flags: Int) {
             super.writeToParcel(out, flags)
@@ -149,7 +149,7 @@ class LockScreenCodeView @JvmOverloads constructor(
 
         companion object {
             @JvmField
-            val CREATOR = object: Parcelable.Creator<SavedState> {
+            val CREATOR = object : Parcelable.Creator<SavedState> {
                 override fun createFromParcel(source: Parcel): SavedState {
                     return SavedState(source)
                 }
@@ -160,5 +160,4 @@ class LockScreenCodeView @JvmOverloads constructor(
             }
         }
     }
-
 }

@@ -29,8 +29,8 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfigurati
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
+import im.vector.app.features.pin.lockscreen.tests.LockScreenTestActivity
 import im.vector.app.features.pin.lockscreen.ui.fallbackprompt.FallbackBiometricDialogFragment
-import im.vector.app.features.pin.lockscreen.tests.TestActivity
 import im.vector.app.features.pin.lockscreen.utils.DevicePromptCheck
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -163,7 +163,7 @@ class BiometricHelperTests {
         val biometricUtils = createBiometricUtils(createDefaultConfiguration(isBiometricsEnabled = true))
         every { lockScreenKeyRepository.hasSystemKey() } returns true
         val latch = CountDownLatch(1)
-        with(ActivityScenario.launch(TestActivity::class.java)) {
+        with(ActivityScenario.launch(LockScreenTestActivity::class.java)) {
             onActivity { activity ->
                 biometricUtils.authenticate(activity)
                 launch {
@@ -184,8 +184,8 @@ class BiometricHelperTests {
         every { DevicePromptCheck.isDeviceWithNoBiometricUI } returns true
         every { lockScreenKeyRepository.hasSystemKey() } returns true
         val latch = CountDownLatch(1)
-        val intent = Intent(InstrumentationRegistry.getInstrumentation().targetContext, TestActivity::class.java)
-        with(ActivityScenario.launch<TestActivity>(intent)) {
+        val intent = Intent(InstrumentationRegistry.getInstrumentation().targetContext, LockScreenTestActivity::class.java)
+        with(ActivityScenario.launch<LockScreenTestActivity>(intent)) {
             onActivity { activity ->
                 biometricUtils.authenticate(activity)
                 launch {
@@ -221,5 +221,4 @@ class BiometricHelperTests {
             isDeviceCredentialUnlockEnabled,
             needsNewCodeValidation
     ).let(otherChanges)
-
 }

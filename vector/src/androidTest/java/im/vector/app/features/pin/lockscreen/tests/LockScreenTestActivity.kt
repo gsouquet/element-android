@@ -18,4 +18,4 @@ package im.vector.app.features.pin.lockscreen.tests
 
 import androidx.fragment.app.FragmentActivity
 
-class TestActivity: FragmentActivity()
+class LockScreenTestActivity : FragmentActivity()

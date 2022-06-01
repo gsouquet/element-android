@@ -25,9 +25,9 @@ data class LockScreenViewState(
         val showBiometricPromptAutomatically: Boolean,
         val pinCodeState: PinCodeState,
         val isBiometricKeyInvalidated: Boolean,
-): MavericksState
+) : MavericksState
 
 sealed class PinCodeState {
-    object Idle: PinCodeState()
-    object FirstCodeEntered: PinCodeState()
+    object Idle : PinCodeState()
+    object FirstCodeEntered : PinCodeState()
 }

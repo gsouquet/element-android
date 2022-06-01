@@ -38,7 +38,7 @@ import kotlin.math.abs
 class KeyStoreCryptoLegacyImpl(
         private val context: Context,
         override val alias: String,
-): KeyStoreCrypto {
+) : KeyStoreCrypto {
 
     private val privateKeyEntry: KeyStore.PrivateKeyEntry by lazy { ensurePrivateKeyEntry(context) }
     private val cipher: Cipher by lazy { Cipher.getInstance(cipherTransformation, RSA_PROVIDER) }
@@ -117,5 +117,4 @@ class KeyStoreCryptoLegacyImpl(
         const val CIPHER_PADDING = "PKCS1Padding"
         val RSA_PROVIDER = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) "AndroidOpenSSL" else "AndroidKeyStoreBCWorkaround"
     }
-
 }

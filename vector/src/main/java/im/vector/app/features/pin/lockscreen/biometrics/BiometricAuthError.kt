@@ -21,7 +21,7 @@ import androidx.biometric.BiometricPrompt
 /**
  * Wrapper for [BiometricPrompt.AuthenticationCallback] errors.
  */
-class BiometricAuthError(val code: Int, message: String): Throwable(message) {
+class BiometricAuthError(val code: Int, message: String) : Throwable(message) {
     /**
      * This error disables Biometric authentication, either temporarily or permanently.
      */

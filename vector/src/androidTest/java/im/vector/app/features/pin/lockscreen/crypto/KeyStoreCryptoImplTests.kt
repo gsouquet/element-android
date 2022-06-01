@@ -36,5 +36,4 @@ class KeyStoreCryptoImplTests {
         val result = keyStoreCryptoImpl.decryptToString(encryptedBytes)
         result shouldBeEqualTo original
     }
-
 }

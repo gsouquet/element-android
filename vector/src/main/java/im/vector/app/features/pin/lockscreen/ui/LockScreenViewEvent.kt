@@ -18,10 +18,10 @@ package im.vector.app.features.pin.lockscreen.ui
 
 import im.vector.app.core.platform.VectorViewEvents
 
-sealed class LockScreenViewEvent: VectorViewEvents {
-    data class ClearPinCode(val confirmationFailed: Boolean): LockScreenViewEvent()
-    object CodeCreationComplete: LockScreenViewEvent()
-    data class AuthSuccessful(val method: AuthMethod): LockScreenViewEvent()
-    data class AuthFailure(val method: AuthMethod): LockScreenViewEvent()
-    data class AuthError(val method: AuthMethod, val throwable: Throwable): LockScreenViewEvent()
+sealed class LockScreenViewEvent : VectorViewEvents {
+    data class ClearPinCode(val confirmationFailed: Boolean) : LockScreenViewEvent()
+    object CodeCreationComplete : LockScreenViewEvent()
+    data class AuthSuccessful(val method: AuthMethod) : LockScreenViewEvent()
+    data class AuthFailure(val method: AuthMethod) : LockScreenViewEvent()
+    data class AuthError(val method: AuthMethod, val throwable: Throwable) : LockScreenViewEvent()
 }

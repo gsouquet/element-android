@@ -40,7 +40,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * A fragment to be displayed on devices that have issues with [BiometricPrompt].
  */
-class FallbackBiometricDialogFragment: DialogFragment(R.layout.fragment_biometric_dialog_container) {
+class FallbackBiometricDialogFragment : DialogFragment(R.layout.fragment_biometric_dialog_container) {
 
     var onDismiss: (() -> Unit)? = null
 
@@ -142,7 +142,7 @@ class FallbackBiometricDialogFragment: DialogFragment(R.layout.fragment_biometri
             val title: String? = null,
             val description: String? = null,
             val cancelActionText: String? = null,
-    ): Parcelable
+    ) : Parcelable
 
     companion object {
         fun instantiate(

@@ -31,9 +31,9 @@ import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfigurati
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
 import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
-import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
 import im.vector.app.features.pin.lockscreen.pincode.EncryptedPinCodeStorage
 import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
+import im.vector.app.features.pin.lockscreen.ui.LockScreenViewModel
 import javax.inject.Singleton
 
 @Module
@@ -68,7 +68,6 @@ object LockScreenModule {
             lockScreenKeyRepository: LockScreenKeyRepository,
             encryptedPinCodeStorage: EncryptedPinCodeStorage,
     ) = PinCodeHelper(lockScreenKeyRepository, encryptedPinCodeStorage)
-
 }
 
 @Module
@@ -82,5 +81,4 @@ interface LockScreenBindsModule {
 
     @Binds
     fun bindSharedPreferencesStorage(pinCodeStore: PinCodeStore): EncryptedPinCodeStorage
-
 }

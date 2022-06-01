@@ -17,7 +17,5 @@
 package im.vector.app.features.pin.lockscreen
 
 object LockScreenTestConstants {
-
     const val ALIAS = "some_alias"
-
 }

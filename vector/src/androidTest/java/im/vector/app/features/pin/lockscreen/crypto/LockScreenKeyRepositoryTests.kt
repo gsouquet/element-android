@@ -143,5 +143,4 @@ class LockScreenKeyRepositoryTests {
         )
         legacyKeyCrypto.initialize()
     }
-
 }

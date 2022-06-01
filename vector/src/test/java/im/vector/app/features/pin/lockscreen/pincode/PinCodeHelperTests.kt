@@ -16,8 +16,8 @@
 
 package im.vector.app.features.pin.lockscreen.pincode
 
-import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
 import im.vector.app.features.pin.lockscreen.crypto.KeyStoreCrypto
+import im.vector.app.features.pin.lockscreen.crypto.LockScreenKeyRepository
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -94,5 +94,4 @@ class PinCodeHelperTests {
         every { keyStoreCrypto.decryptToString(encryptedPinCode) } returns "SOME_OTHER_VALUE"
         pinCodeHelper.verifyPinCode(originalPinCode).shouldBeFalse()
     }
-
 }

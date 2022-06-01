@@ -11,7 +11,7 @@
         <activity android:name=".features.debug.features.DebugFeaturesSettingsActivity" />
 
         <!-- Used for UI tests to display the BiometricPrompt. It's normal that it appears as an error. -->
-        <activity android:exported="false" android:name=".features.pin.lockscreen.tests.TestActivity" />
+        <activity android:exported="false" android:name=".features.pin.lockscreen.tests.LockScreenTestActivity" />
     </application>
 
 </manifest>

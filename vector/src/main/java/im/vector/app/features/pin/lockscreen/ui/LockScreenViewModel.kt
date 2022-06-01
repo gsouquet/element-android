@@ -25,14 +25,14 @@ import com.airbnb.mvrx.withState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import im.vector.app.features.pin.lockscreen.biometrics.BiometricHelper
-import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
-import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
-import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.core.di.MavericksAssistedViewModelFactory
 import im.vector.app.core.di.hiltMavericksViewModelFactory
 import im.vector.app.core.platform.VectorViewModel
 import im.vector.app.features.pin.lockscreen.biometrics.BiometricAuthError
+import im.vector.app.features.pin.lockscreen.biometrics.BiometricHelper
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguration
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenConfiguratorProvider
+import im.vector.app.features.pin.lockscreen.configuration.LockScreenMode
 import im.vector.app.features.pin.lockscreen.pincode.PinCodeHelper
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
@@ -45,7 +45,7 @@ class LockScreenViewModel @AssistedInject constructor(
         private val pinCodeHelper: PinCodeHelper,
         private val biometricHelper: BiometricHelper,
         private val configuratorProvider: LockScreenConfiguratorProvider,
-): VectorViewModel<LockScreenViewState, LockScreenAction, LockScreenViewEvent>(initialState) {
+) : VectorViewModel<LockScreenViewState, LockScreenAction, LockScreenViewEvent>(initialState) {
 
     @AssistedFactory
     interface Factory : MavericksAssistedViewModelFactory<LockScreenViewModel, LockScreenViewState> {
@@ -125,7 +125,7 @@ class LockScreenViewModel @AssistedInject constructor(
     }.catch { error ->
         _viewEvents.post(LockScreenViewEvent.AuthError(AuthMethod.PIN_CODE, error))
     }.onEach { newPinState ->
-        newPinState?.let { setState { copy(pinCodeState = it) }}
+        newPinState?.let { setState { copy(pinCodeState = it) } }
     }.launchIn(viewModelScope)
 
     private fun showBiometricPrompt(activity: FragmentActivity) = flow {
@@ -156,12 +156,12 @@ class LockScreenViewModel @AssistedInject constructor(
 
     private fun updateStateWithBiometricInfo() {
         val configuration = withState(this) { it.lockScreenConfiguration }
-        val canUseBiometricAuth = configuration.mode == LockScreenMode.VERIFY
-                && !isSystemAuthTemporarilyDisabledByBiometricPrompt
-                && biometricHelper.isSystemAuthEnabled
+        val canUseBiometricAuth = configuration.mode == LockScreenMode.VERIFY &&
+                !isSystemAuthTemporarilyDisabledByBiometricPrompt &&
+                biometricHelper.isSystemAuthEnabled
         val isBiometricKeyInvalidated = biometricHelper.hasSystemKey && !biometricHelper.isSystemKeyValid
-        val showBiometricPromptAutomatically = canUseBiometricAuth
-                && configuration.autoStartBiometric
+        val showBiometricPromptAutomatically = canUseBiometricAuth &&
+                configuration.autoStartBiometric
         setState {
             copy(
                     canUseBiometricAuth = canUseBiometricAuth,
@@ -176,4 +176,3 @@ class LockScreenViewModel @AssistedInject constructor(
         updateStateWithBiometricInfo()
     }
 }
-

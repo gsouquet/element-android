@@ -25,5 +25,4 @@ object LockScreenTestUtils {
         load(null)
         deleteEntry(alias)
     }
-
 }

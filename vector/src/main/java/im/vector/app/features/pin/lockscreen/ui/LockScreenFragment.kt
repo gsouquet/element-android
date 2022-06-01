@@ -36,7 +36,7 @@ import im.vector.app.features.pin.lockscreen.utils.vibrate
 import im.vector.app.features.pin.lockscreen.views.LockScreenCodeView
 
 @AndroidEntryPoint
-class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
+class LockScreenFragment : VectorBaseFragment<FragmentLockScreenBinding>() {
 
     var lockScreenListener: LockScreenListener? = null
     var onLeftButtonClickedListener: View.OnClickListener? = null
@@ -205,4 +205,3 @@ class LockScreenFragment: VectorBaseFragment<FragmentLockScreenBinding>() {
         viewModel.handle(LockScreenAction.ShowBiometricPrompt(requireActivity()))
     }
 }
-
